@@ -1130,9 +1130,18 @@ function empleadoActivoEnMes(e){
 }
 
 function getNomina(){
-  // Exactamente los mismos empleados que aparecen en la tabla de pagos
-  return S.empleados
-    .filter(e=>empleadoActivoEnMes(e))
+  if(!S.extrasEquipo)S.extrasEquipo=[];
+  // Empleados normales activos en este mes
+  const normales=S.empleados.filter(e=>empleadoActivoEnMes(e));
+  // Empleados agregados manualmente al mes
+  const extrasIds=S.extrasEquipo
+    .filter(x=>x.tipo==='add'&&x.mes===S.mes&&x.anio===S.anio)
+    .map(x=>x.empId);
+  const extras=S.empleados.filter(e=>extrasIds.includes(e.id)&&!normales.find(n=>n.id===e.id));
+  const todos=[...normales,...extras];
+  // Excluir skipped
+  return todos
+    .filter(e=>!(S.skips||[]).includes(`skip-${e.id}-${S.mes}-${S.anio}`))
     .reduce((s,e)=>s+getSueldoEnMes(e),0);
 }
 function getGastosFijos(){return S.gastos.reduce((s,g)=>{if(g.frecuencia==='mensual')return s+g.monto;if(g.frecuencia==='anual')return s+g.monto/12;return s;},0);}
