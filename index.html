@@ -1047,36 +1047,32 @@ function getMRR(){
   const extras=activos.reduce((s,c)=>s+getTotalExtra(c.id),0);
   return retainers+extras;
 }
-// Retorna true si el empleado trabajaba en el mes actual de S
-function empleadoActivoEnMes(e){
-  if(['Dio','Santi'].includes(e.nombre)) return false; // socios no van en nómina
-  const mesActual=`${S.anio}-${String(S.mes).padStart(2,'0')}`;
-  // Chequear inicio laboral — si no tiene fecha, solo aparece en el mes actual en adelante
-  if(e.inicioLaboral){
-    if(e.inicioLaboral > mesActual) return false;
-  } else {
-    // Sin inicioLaboral: solo aparece si está activo y es el mes actual o futuro
-    const hoy=`${new Date().getFullYear()}-${String(new Date().getMonth()).padStart(2,'0')}`;
-    if(mesActual < hoy) return false;
-  }
-  // Chequear fin laboral
-  if(e.finLaboral && e.finLaboral < mesActual) return false;
-  // Chequear skip puntual del mes
-  const skipKey=`skip-${e.id}-${S.mes}-${S.anio}`;
-  if((S.skips||[]).includes(skipKey)) return false;
-  return e.estado==='activo'||!!e.finLaboral;
-}
+
 
 function getSueldoEnMes(e){
-  // Si tiene historial de sueldos, buscar el vigente
   if(e.sueldoHistory && e.sueldoHistory.length){
     const mesActual=`${S.anio}-${String(S.mes).padStart(2,'0')}`;
-    const vigentes=e.sueldoHistory
-      .filter(h=>h.desde<=mesActual)
-      .sort((a,b)=>b.desde.localeCompare(a.desde));
+    const vigentes=e.sueldoHistory.filter(h=>h.desde<=mesActual).sort((a,b)=>b.desde.localeCompare(a.desde));
     if(vigentes.length) return vigentes[0].monto;
   }
   return e.sueldo||0;
+}
+
+function empleadoActivoEnMes(e){
+  if(['Dio','Santi'].includes(e.nombre)) return false;
+  const mesActual=`${S.anio}-${String(S.mes).padStart(2,'0')}`;
+  if(e.inicioLaboral){
+    if(e.inicioLaboral > mesActual) return false;
+  } else {
+    const hoy=`${new Date().getFullYear()}-${String(new Date().getMonth()).padStart(2,'0')}`;
+    if(mesActual < hoy) return false;
+  }
+  // finLaboral: si el último mes fue X, en X+1 ya no aparece
+  if(e.finLaboral && e.finLaboral < mesActual) return false;
+  if(e.estado==='inactivo' && !e.finLaboral) return false;
+  const skipKey=`skip-${e.id}-${S.mes}-${S.anio}`;
+  if((S.skips||[]).includes(skipKey)) return false;
+  return true;
 }
 
 function getNomina(){
