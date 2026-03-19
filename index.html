@@ -347,6 +347,7 @@ tr:hover td{background:rgba(26,115,232,.03)}
         <div style="font-size:11px;color:var(--yellow);font-weight:700">⏳ Pendiente: <span id="d-dio-pend">$0</span></div>
       </div>
       <div id="d-dio-breakdown" style="display:flex;flex-wrap:wrap;gap:5px;overflow-x:auto"></div>
+      <div id="d-dio-trans"></div>
     </div>
 
     <div class="d-socio-card" style="margin-bottom:16px">
@@ -362,6 +363,7 @@ tr:hover td{background:rgba(26,115,232,.03)}
         <div style="font-size:11px;color:var(--yellow);font-weight:700">⏳ Pendiente: <span id="d-santi-pend">$0</span></div>
       </div>
       <div id="d-santi-breakdown" style="display:flex;flex-wrap:wrap;gap:5px;overflow-x:auto"></div>
+      <div id="d-santi-trans"></div>
     </div>
 
     <!-- Tabla equipo con scroll -->
@@ -639,6 +641,21 @@ tr:hover td{background:rgba(26,115,232,.03)}
     <div class="mact">
       <button class="btn bg" onclick="closeModal('m-extra')">Cancelar</button>
       <button class="btn bp" onclick="guardarExtra()">Agregar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Transferencia Socio -->
+<div class="mo" id="m-trans">
+  <div class="modal" style="width:340px">
+    <div class="mtitle">Registrar transferencia a <span id="tr-nombre" style="color:var(--blue)"></span></div>
+    <div style="font-size:11px;color:var(--text2);margin-bottom:14px">Le corresponde <strong id="tr-total" style="color:var(--text)"></strong> este mes.</div>
+    <input id="tr-socio" type="hidden">
+    <div class="fr"><label>Monto transferido</label><input id="tr-monto" type="number" placeholder="0"></div>
+    <div class="fr"><label>Nota (opcional)</label><input id="tr-nota" placeholder="Ej: adelanto, saldo, etc."></div>
+    <div class="mact">
+      <button class="btn bg" onclick="closeModal('m-trans')">Cancelar</button>
+      <button class="btn bp" onclick="guardarTrans()">Guardar</button>
     </div>
   </div>
 </div>
@@ -967,10 +984,24 @@ function togglePagoEq(id){
 }
 
 // ─── CALCS ───────────────────────────────────────────────────────────────────
+
+// Retorna true si el cliente existe y está vigente en el mes/año actual de S
+function clienteVigenteEnMes(c){
+  if(c.estado!=='activo')return false;
+  // Chequear inicio de servicio
+  if(c.inicioServicio){
+    const mesActual=`${S.anio}-${String(S.mes).padStart(2,'0')}`;
+    if(c.inicioServicio>mesActual)return false;
+  }
+  // Chequear pausa puntual del mes
+  if(clientePausadoMes(c.id))return false;
+  return true;
+}
+
 function getMRR(){
   if(!S.clientesPausados)S.clientesPausados=[];
   if(!S.extras)S.extras=[];
-  const activos=S.clientes.filter(c=>c.estado==='activo'&&!clientePausadoMes(c.id));
+  const activos=S.clientes.filter(c=>clienteVigenteEnMes(c));
   const retainers=activos.reduce((s,c)=>s+retainer(c),0);
   const extras=activos.reduce((s,c)=>s+getTotalExtra(c.id),0);
   return retainers+extras;
@@ -1139,8 +1170,8 @@ function renderDash(){
   const neto=ing-costos;
   const dio=Math.max(0,Math.round(neto*0.4));
   const santi=Math.max(0,Math.round(neto*0.4));
-  const pendiente=S.clientes.filter(c=>c.estado==='activo'&&!isPagadoC(c.id)).reduce((s,c)=>s+retainer(c),0);
-  const pendN=S.clientes.filter(c=>c.estado==='activo'&&!isPagadoC(c.id)).length;
+  const pendiente=S.clientes.filter(c=>clienteVigenteEnMes(c)&&!isPagadoC(c.id)).reduce((s,c)=>s+retainer(c),0);
+  const pendN=S.clientes.filter(c=>clienteVigenteEnMes(c)&&!isPagadoC(c.id)).length;
   const margen=ing>0?Math.round((neto/ing)*100):0;
 
   const setV=(id,v,col)=>{const el=document.getElementById(id);if(!el)return;el.textContent=v;if(col)el.style.color=col;};
@@ -1152,18 +1183,43 @@ function renderDash(){
   setV('d-dio',fmt(dio));setV('d-santi',fmt(santi));
 
   // Client breakdown chips — green if paid, red if not yet
-  const activos=S.clientes.filter(c=>c.estado==='activo');
+  const activos=S.clientes.filter(c=>clienteVigenteEnMes(c));
 
-  // Cobrado real vs pendiente para socios
-  const realCobrado=activos.filter(c=>isPagadoC(c.id)).reduce((s,c)=>s+retainer(c),0);
-  const osMes=getOneShotsMes();
-  const ingReal=realCobrado+osMes;
-  const netoReal=ingReal-costos;
-  const dioReal=Math.max(0,Math.round(netoReal*0.4));
-  const dioPend=Math.max(0,dio-dioReal);
+  // Transferencias manuales a socios
+  const transKey=id=>`trans-${id}-${S.mes}-${S.anio}`;
+  if(!S.transferencias)S.transferencias=[];
+  const getTrans=id=>S.transferencias.filter(t=>t.key===transKey(id)).reduce((s,t)=>s+t.monto,0);
+
+  const dioTrans=getTrans('dio');
+  const santiTrans=getTrans('santi');
+  const dioPend=Math.max(0,dio-dioTrans);
+  const santiPend=Math.max(0,santi-santiTrans);
+
   const setS=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
-  setS('d-dio-real',fmt(dioReal));setS('d-dio-pend',fmt(dioPend));
-  setS('d-santi-real',fmt(dioReal));setS('d-santi-pend',fmt(dioPend));
+  setS('d-dio-real',fmt(dioTrans));setS('d-dio-pend',fmt(dioPend));
+  setS('d-santi-real',fmt(santiTrans));setS('d-santi-pend',fmt(santiPend));
+
+  // Botones de transferencia en las cards de socios
+  const renderTransBtn=(socioId,total,trans)=>{
+    const el=document.getElementById(`d-${socioId}-trans`);if(!el)return;
+    const pend=Math.max(0,total-trans);
+    const lista=S.transferencias.filter(t=>t.key===transKey(socioId));
+    el.innerHTML=`
+      <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:4px">
+        ${lista.length?`<div style="display:flex;flex-direction:column;gap:3px;margin-bottom:8px">
+          ${lista.map(t=>`<div style="display:flex;justify-content:space-between;align-items:center;font-size:11px">
+            <span style="color:var(--text2)">${t.nota||'Transferencia'}</span>
+            <span style="font-weight:700;color:var(--green)">${fmt(t.monto)}</span>
+            <button onclick="borrarTrans('${socioId}','${t.id}')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:11px;padding:0 3px">✕</button>
+          </div>`).join('')}
+        </div>`:''}
+        <button onclick="abrirTrans('${socioId}','${socioId==='dio'?'Dio':'Santi'}',${total})" style="width:100%;padding:7px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:Montserrat,sans-serif;background:var(--surface2);border:1px dashed var(--border);color:var(--text2)">
+          + Registrar transferencia${pend>0?' (falta '+fmt(pend)+')':''}
+        </button>
+      </div>`;
+  };
+  renderTransBtn('dio',dio,dioTrans);
+  renderTransBtn('santi',santi,santiTrans);
 
   const chipHtml=activos.map(c=>{
     const p=isPagadoC(c.id);
@@ -1260,7 +1316,7 @@ function renderDashCharts(){
   // Chart 1: ingresos por cliente
   const ctxCl=document.getElementById('ch-clientes');if(!ctxCl)return;
   destroyChart('cl');
-  const activos=S.clientes.filter(c=>c.estado==='activo');
+  const activos=S.clientes.filter(c=>clienteVigenteEnMes(c));
   if(activos.length){
     charts.cl=new Chart(ctxCl.getContext('2d'),{
       type:'doughnut',
@@ -1271,8 +1327,8 @@ function renderDashCharts(){
   // Chart 2: Recurrentes vs Puntuales
   const ctxT=document.getElementById('ch-tipos');if(!ctxT)return;
   destroyChart('tipos');
-  const rrss=S.clientes.filter(c=>c.estado==='activo'&&(c.tipo==='rrss'||c.tipo==='rrss+pauta')).reduce((s,c)=>s+retainer(c),0);
-  const pauta=S.clientes.filter(c=>c.estado==='activo'&&(c.tipo==='pauta'||c.tipo==='rrss+pauta')).reduce((s,c)=>s+retainer(c)/((c.tipo==='rrss+pauta'?2:1)),0);
+  const rrss=S.clientes.filter(c=>clienteVigenteEnMes(c)&&(c.tipo==='rrss'||c.tipo==='rrss+pauta')).reduce((s,c)=>s+retainer(c),0);
+  const pauta=S.clientes.filter(c=>clienteVigenteEnMes(c)&&(c.tipo==='pauta'||c.tipo==='rrss+pauta')).reduce((s,c)=>s+retainer(c)/((c.tipo==='rrss+pauta'?2:1)),0);
   const oneshot=getOneShotsMes();
   if(rrss||pauta||oneshot){
     charts.tipos=new Chart(ctxT.getContext('2d'),{
@@ -1339,12 +1395,38 @@ function borrarExtra(id){
   save();renderCobros();renderDash();
 }
 
+function abrirTrans(socioId,nombre,total){
+  document.getElementById('tr-socio').value=socioId;
+  document.getElementById('tr-nombre').textContent=nombre;
+  document.getElementById('tr-total').textContent=fmt(total);
+  document.getElementById('tr-monto').value='';
+  document.getElementById('tr-nota').value='';
+  openModal('m-trans');
+}
+function guardarTrans(){
+  const socioId=document.getElementById('tr-socio').value;
+  const monto=parseFloat(document.getElementById('tr-monto').value)||0;
+  if(!monto)return alert('Ingresá el monto');
+  const nota=document.getElementById('tr-nota').value.trim();
+  if(!S.transferencias)S.transferencias=[];
+  S.transferencias.push({
+    id:Date.now(),
+    key:`trans-${socioId}-${S.mes}-${S.anio}`,
+    socioId,monto,nota,mes:S.mes,anio:S.anio
+  });
+  save();closeModal('m-trans');renderDash();
+}
+function borrarTrans(socioId,id){
+  S.transferencias=(S.transferencias||[]).filter(t=>!(t.socioId===socioId&&t.id==id));
+  save();renderDash();
+}
+
 function renderCobros(){
   if(!S.clientesPausados)S.clientesPausados=[];
   if(!S.extras)S.extras=[];
 
   // Solo mostrar activos Y no pausados en este mes
-  const todos=S.clientes.filter(c=>c.estado==='activo');
+  const todos=S.clientes.filter(c=>c.estado==='activo'&&(()=>{if(!c.inicioServicio)return true;const m=`${S.anio}-${String(S.mes).padStart(2,'0')}`;return c.inicioServicio<=m;})());
   const visibles=todos.filter(c=>!clientePausadoMes(c.id));
   const pausados=todos.filter(c=>clientePausadoMes(c.id));
 
@@ -2039,6 +2121,7 @@ if(!S.skips)S.skips=[];
 if(!S.facturas)S.facturas=[];
 if(!S.extras)S.extras=[];
 if(!S.clientesPausados)S.clientesPausados=[];
+if(!S.transferencias)S.transferencias=[];
 if(!S.clientes||!S.clientes.length)S={clientes:[],proyectos:[],empleados:[],gastos:[],cobros:[],pagosEq:[],skips:[],facturas:[],cotizacion:1500,fondoUSD:1047.75,mes:2,anio:2026};
 initSeed();
 setTimeout(()=>{
