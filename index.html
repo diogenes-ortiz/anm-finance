@@ -2155,11 +2155,21 @@ function initSeed(){
   if(S.clientes&&S.clientes.length)return;
 
   S.clientes=[
-    {id:101,nombre:'Mipileta', tipo:'rrss',     servicios:'Community management, contenido, reels',retainer:1700000,moneda:'ARS',contacto:'',estado:'activo',empleadoIds:[204,205],presupuesto:null,inicioServicio:'2025-09',retainerHistory:[{monto:1700000,desde:'2025-09',nota:'Inicial'}]},
-    {id:102,nombre:'Modulo',   tipo:'rrss',     servicios:'Community management, contenido mensual',retainer:420000,moneda:'ARS',contacto:'',estado:'activo',empleadoIds:[203],presupuesto:null,inicioServicio:'2025-09',retainerHistory:[{monto:420000,desde:'2025-09',nota:'Inicial'}]},
-    {id:103,nombre:'Coarmi',   tipo:'pauta',    servicios:'Gestión de pauta Meta + Google',retainer:250000,moneda:'ARS',contacto:'',estado:'activo',empleadoIds:[203],presupuesto:null,inicioServicio:'2025-09',retainerHistory:[{monto:250000,desde:'2025-09',nota:'Inicial'}]},
-    {id:104,nombre:'Antquera', tipo:'rrss',     servicios:'Community management, contenido, reels',retainer:1350000,moneda:'ARS',contacto:'',estado:'activo',empleadoIds:[205],presupuesto:null,inicioServicio:'2025-09',retainerHistory:[{monto:1750000,desde:'2025-09',nota:'Inicial'},{monto:1350000,desde:'2026-03',nota:'Ajuste marzo 2026'}]},
-    {id:105,nombre:'Froz',     tipo:'rrss',     servicios:'Redes sociales completas',retainer:800000,moneda:'ARS',contacto:'',estado:'activo',empleadoIds:[],presupuesto:null,inicioServicio:'2026-03',retainerHistory:[{monto:800000,desde:'2026-03',nota:'Inicial'}]},
+    // Mipileta: $1.700.000 sep25→feb26, $3.000.000 desde mar26
+    {id:101,nombre:'Mipileta', tipo:'rrss',     servicios:'Community management, contenido, reels',retainer:3000000,moneda:'ARS',contacto:'',estado:'activo',empleadoIds:[204,205],presupuesto:null,inicioServicio:'2025-09',
+      retainerHistory:[{monto:1700000,desde:'2025-09',nota:'Inicial'},{monto:3000000,desde:'2026-03',nota:'Aumento de costo de servicio'}]},
+    // Modulo: $420.000 fijo
+    {id:102,nombre:'Modulo',   tipo:'rrss',     servicios:'Community management, contenido mensual',retainer:420000,moneda:'ARS',contacto:'',estado:'activo',empleadoIds:[203],presupuesto:null,inicioServicio:'2025-09',
+      retainerHistory:[{monto:420000,desde:'2025-09',nota:'Inicial'}]},
+    // Coarmi: $250.000 fijo (sep-oct-nov arranca, en dic sube por algo, vuelve en feb)
+    {id:103,nombre:'Coarmi',   tipo:'pauta',    servicios:'Gestión de pauta Meta + Google',retainer:250000,moneda:'ARS',contacto:'',estado:'activo',empleadoIds:[203],presupuesto:null,inicioServicio:'2025-09',
+      retainerHistory:[{monto:250000,desde:'2025-09',nota:'Inicial'}]},
+    // Antquera: arranca dic25 con $1.350.000, sube a $1.750.000 en ene26, baja a $1.350.000 en mar26
+    {id:104,nombre:'Antquera', tipo:'rrss',     servicios:'Community management, contenido, reels',retainer:1350000,moneda:'ARS',contacto:'',estado:'activo',empleadoIds:[205],presupuesto:null,inicioServicio:'2025-12',
+      retainerHistory:[{monto:1350000,desde:'2025-12',nota:'Inicio'},{monto:1750000,desde:'2026-01',nota:'Servicio completo'},{monto:1350000,desde:'2026-03',nota:'Ajuste marzo 2026'}]},
+    // Froz: $800.000 desde mar26
+    {id:105,nombre:'Froz',     tipo:'rrss',     servicios:'Redes sociales completas',retainer:800000,moneda:'ARS',contacto:'',estado:'activo',empleadoIds:[],presupuesto:null,inicioServicio:'2026-03',
+      retainerHistory:[{monto:800000,desde:'2026-03',nota:'Inicial'}]},
   ];
 
   S.empleados=[
@@ -2169,7 +2179,9 @@ function initSeed(){
     {id:204,nombre:'Luisina',    rol:'Community Manager',     sueldo:550000,moneda:'ARS',dia:1, dedicacion:'part',     estado:'activo', email:'',color:'#2dca72',clienteIds:[101],inicioLaboral:'2025-09'},
     {id:205,nombre:'Ori',        rol:'Community Manager',     sueldo:500000,moneda:'ARS',dia:1, dedicacion:'freelance',estado:'activo', email:'',color:'#e8b84a',clienteIds:[101,104],inicioLaboral:'2025-09'},
     {id:206,nombre:'Luli Pagani',rol:'Diseñadora',            sueldo:600000,moneda:'ARS',dia:1, dedicacion:'freelance',estado:'activo', email:'',color:'#2dcab4',clienteIds:[],inicioLaboral:'2025-09'},
-    {id:207,nombre:'Mile',       rol:'Community Manager',     sueldo:250000,moneda:'ARS',dia:1, dedicacion:'part',     estado:'inactivo',email:'',color:'#e8704a',clienteIds:[104],inicioLaboral:'2025-09',finLaboral:'2026-02'},
+    // Mile: ene→feb 2026
+    {id:207,nombre:'Mile',       rol:'Community Manager',     sueldo:250000,moneda:'ARS',dia:1, dedicacion:'part',     estado:'inactivo',email:'',color:'#e8704a',clienteIds:[104],inicioLaboral:'2026-01',finLaboral:'2026-02'},
+    // Martu: sep 2025→feb 2026
     {id:208,nombre:'Martu',      rol:'Community Manager',     sueldo:400000,moneda:'ARS',dia:1, dedicacion:'part',     estado:'inactivo',email:'',color:'#a0a0b0',clienteIds:[101],inicioLaboral:'2025-09',finLaboral:'2026-02'},
   ];
   // Sueldo Ori: 280k (Mipileta) + 220k (Antquera) = 500k
