@@ -176,7 +176,11 @@ tr:hover td{background:rgba(26,115,232,.03)}
 .div{height:1px;background:var(--border);margin:22px 0}
 .empty{text-align:center;padding:36px;color:var(--text2);font-size:12px}
 
-/* CHART ROW 3 */
+/* DASHBOARD KPI GRID — siempre 2 cols */
+.d-kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+/* SOCIO CARD */
+.d-socio-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px}
+
 .chart3{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:16px;margin-bottom:18px}
 /* NETO HIGHLIGHT */
 .neto-box{background:linear-gradient(135deg,rgba(26,115,232,.15) 0%,rgba(26,115,232,.05) 100%);border:1px solid rgba(26,115,232,.3);border-radius:var(--r);padding:18px 20px}
@@ -264,6 +268,8 @@ tr:hover td{background:rgba(26,115,232,.03)}
   .content{padding:12px 10px}
   .cval{font-size:20px}
   .topbar{padding:12px 10px 12px 50px}
+  .d-kpi-grid .cval{font-size:16px}
+  .d-kpi-grid .card,.d-kpi-grid .neto-box{padding:11px 12px}
 }
 </style>
 </head>
@@ -311,60 +317,63 @@ tr:hover td{background:rgba(26,115,232,.03)}
   <div class="content">
 
     <!-- Recordatorio facturación -->
-    <div id="d-reminder" style="background:linear-gradient(90deg,rgba(232,184,74,.18),rgba(232,184,74,.06));border:1px solid rgba(232,184,74,.4);border-radius:10px;padding:11px 16px;margin-bottom:16px;display:none;align-items:center;gap:10px">
+    <div id="d-reminder" style="background:linear-gradient(90deg,rgba(232,184,74,.18),rgba(232,184,74,.06));border:1px solid rgba(232,184,74,.4);border-radius:10px;padding:11px 16px;margin-bottom:16px;display:none;align-items:center;gap:10px;flex-wrap:wrap">
       <span style="font-size:18px">🔔</span>
-      <div style="flex:1"><div style="font-weight:800;font-size:12px;color:var(--yellow)">Recordatorio: Facturas del mes</div><div style="font-size:11px;color:var(--text2);margin-top:2px">El 25 de cada mes hay que enviarle las facturas a los clientes. <span id="d-reminder-days" style="color:var(--yellow);font-weight:700"></span></div></div>
+      <div style="flex:1;min-width:180px"><div style="font-weight:800;font-size:12px;color:var(--yellow)">Recordatorio: Facturas del mes</div><div style="font-size:11px;color:var(--text2);margin-top:2px">El 25 de cada mes hay que enviarle las facturas a los clientes. <span id="d-reminder-days" style="color:var(--yellow);font-weight:700"></span></div></div>
       <button onclick="document.getElementById('d-reminder').style.display='none'" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px">✕</button>
     </div>
 
-    <!-- KPIs fila 1 -->
-    <div class="crow c4">
+    <!-- KPIs fila 1 — 2 cols siempre -->
+    <div class="d-kpi-grid">
       <div class="card ct ct-g"><div class="clabel">Ingresos del Mes</div><div class="cval col-g" id="d-ingresos">$0</div><div class="csub" id="d-ingresos-sub">—</div></div>
       <div class="card ct ct-r"><div class="clabel">Costos del Mes</div><div class="cval col-r" id="d-costos">$0</div><div class="csub" id="d-costos-sub">—</div></div>
-      <div class="neto-box ct ct-bl" style="border-radius:var(--r)"><div class="clabel">🎯 Lo que nos queda (Neto)</div><div class="cval col-b" id="d-neto">$0</div><div class="csub" id="d-neto-sub">—</div></div>
+    </div>
+    <div class="d-kpi-grid" style="margin-bottom:16px">
+      <div class="neto-box ct ct-bl" style="border-radius:var(--r)"><div class="clabel">🎯 Neto del Mes</div><div class="cval col-b" id="d-neto">$0</div><div class="csub" id="d-neto-sub">—</div></div>
       <div class="card ct ct-y"><div class="clabel">Pendiente de Cobrar</div><div class="cval col-y" id="d-pendiente">$0</div><div class="csub" id="d-pendiente-sub">—</div></div>
     </div>
 
-    <!-- KPIs socios -->
-    <div class="crow c2" style="margin-bottom:20px">
-      <div class="card" style="display:flex;align-items:center;gap:18px;padding:14px 18px">
-        <div class="av" style="background:#1A73E8;color:#fff;width:40px;height:40px;font-size:14px;flex-shrink:0">DIO</div>
-        <div style="flex:1;min-width:0">
-          <div class="clabel" style="margin-bottom:4px">Le toca a Dio este mes (40%)</div>
-          <div class="cval col-b" id="d-dio">$0</div>
-          <div style="display:flex;align-items:center;gap:8px;margin-top:5px;flex-wrap:wrap">
-            <div style="font-size:11px;color:var(--green);font-weight:700">✓ Cobrado: <span id="d-dio-real">$0</span></div>
-            <div style="font-size:10px;color:var(--text3)">·</div>
-            <div style="font-size:11px;color:var(--yellow);font-weight:700">⏳ Pendiente: <span id="d-dio-pend">$0</span></div>
-          </div>
-          <div id="d-dio-breakdown" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:5px"></div>
+    <!-- Socios — stack vertical, sin layout horizontal forzado -->
+    <div class="d-socio-card" style="margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+        <div class="av" style="background:#1A73E8;color:#fff;width:36px;height:36px;font-size:13px;flex-shrink:0">DIO</div>
+        <div>
+          <div class="clabel" style="margin-bottom:2px">Le toca a Dio este mes (40%)</div>
+          <div class="cval col-b" id="d-dio" style="font-size:20px">$0</div>
         </div>
-        <div style="text-align:right;flex-shrink:0"><div style="font-size:28px;font-weight:900;color:rgba(26,115,232,.25)">40%</div></div>
       </div>
-      <div class="card" style="display:flex;align-items:center;gap:18px;padding:14px 18px">
-        <div class="av" style="background:#4d96ff;color:#fff;width:40px;height:40px;font-size:14px;flex-shrink:0">SAN</div>
-        <div style="flex:1;min-width:0">
-          <div class="clabel" style="margin-bottom:4px">Le toca a Santi este mes (40%)</div>
-          <div class="cval col-b" id="d-santi">$0</div>
-          <div style="display:flex;align-items:center;gap:8px;margin-top:5px;flex-wrap:wrap">
-            <div style="font-size:11px;color:var(--green);font-weight:700">✓ Cobrado: <span id="d-santi-real">$0</span></div>
-            <div style="font-size:10px;color:var(--text3)">·</div>
-            <div style="font-size:11px;color:var(--yellow);font-weight:700">⏳ Pendiente: <span id="d-santi-pend">$0</span></div>
-          </div>
-          <div id="d-santi-breakdown" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:5px"></div>
-        </div>
-        <div style="text-align:right;flex-shrink:0"><div style="font-size:28px;font-weight:900;color:rgba(77,150,255,.25)">40%</div></div>
+      <div style="display:flex;gap:12px;margin-bottom:8px;flex-wrap:wrap">
+        <div style="font-size:11px;color:var(--green);font-weight:700">✓ Cobrado: <span id="d-dio-real">$0</span></div>
+        <div style="font-size:11px;color:var(--yellow);font-weight:700">⏳ Pendiente: <span id="d-dio-pend">$0</span></div>
       </div>
+      <div id="d-dio-breakdown" style="display:flex;flex-wrap:wrap;gap:5px;overflow-x:auto"></div>
     </div>
 
-    <!-- Equipo pagos del mes — empleados primero, socios al final -->
+    <div class="d-socio-card" style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+        <div class="av" style="background:#4d96ff;color:#fff;width:36px;height:36px;font-size:13px;flex-shrink:0">SAN</div>
+        <div>
+          <div class="clabel" style="margin-bottom:2px">Le toca a Santi este mes (40%)</div>
+          <div class="cval col-b" id="d-santi" style="font-size:20px">$0</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;margin-bottom:8px;flex-wrap:wrap">
+        <div style="font-size:11px;color:var(--green);font-weight:700">✓ Cobrado: <span id="d-santi-real">$0</span></div>
+        <div style="font-size:11px;color:var(--yellow);font-weight:700">⏳ Pendiente: <span id="d-santi-pend">$0</span></div>
+      </div>
+      <div id="d-santi-breakdown" style="display:flex;flex-wrap:wrap;gap:5px;overflow-x:auto"></div>
+    </div>
+
+    <!-- Tabla equipo con scroll -->
     <div class="tw">
       <div class="th">
         <div class="tt">Pagos del Mes — <span id="d-mes-eq" style="color:var(--text2);font-weight:600;font-size:11px"></span></div>
-        <div style="font-size:10px;color:var(--text2)">Empleados primero · Socios al final</div>
+        <div style="font-size:10px;color:var(--text2)">Empleados · Socios</div>
       </div>
-      <table><thead><tr><th>Persona</th><th>Tipo</th><th>Cliente(s)</th><th>Monto</th><th>Día pago</th><th>Estado / Pago</th><th></th></tr></thead>
-      <tbody id="d-eq-tbody"></tbody></table>
+      <div style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+        <table style="min-width:520px"><thead><tr><th>Persona</th><th>Tipo</th><th>Cliente(s)</th><th>Monto</th><th>Día</th><th>Estado</th><th></th></tr></thead>
+        <tbody id="d-eq-tbody"></tbody></table>
+      </div>
     </div>
 
   </div>
@@ -1608,12 +1617,20 @@ function renderEquipo(){
           <select id="ded-${e.id}" onchange="saveRol(${e.id})" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text);font-family:Montserrat,sans-serif;font-size:11px;outline:none;width:130px">${dedOpts}</select>
         </div>`;
 
+    // Sueldo: editable para no-socios
+    const sueldoCell=esSocio(e)
+      ? `<strong style="color:var(--text2)">—</strong>`
+      : `<div style="display:flex;align-items:center;gap:4px">
+          <span style="color:var(--text3);font-size:12px;font-weight:700">$</span>
+          <input id="sueldo-${e.id}" type="number" value="${e.sueldo||0}" onblur="saveSueldo(${e.id})" onkeydown="if(event.key==='Enter')this.blur()" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-family:Montserrat,sans-serif;font-size:12px;font-weight:700;outline:none;width:110px">
+        </div>`;
+
     return`<tr style="${activo?'':'opacity:.6'}">
       <td><div class="erow"><div class="av" style="background:${e.color};color:#fff">${ini(e.nombre)}</div>
         <div><div style="font-weight:700">${e.nombre}</div><div style="font-size:10px;color:var(--text2)">${e.email||''}</div></div></div></td>
       <td>${rolCell}</td>
       <td>${cNames}</td>
-      <td><strong>${fmt(e.sueldo,e.moneda)}</strong></td>
+      <td>${sueldoCell}</td>
       <td>Día ${e.dia}</td>
       <td><span class="badge ${activo?'b-g':'b-gr'}">${e.estado}</span></td>
       <td style="display:flex;gap:6px">
@@ -1622,6 +1639,12 @@ function renderEquipo(){
       </td>
     </tr>`;
   }).join('');
+}
+
+function saveSueldo(id){
+  const e=S.empleados.find(x=>x.id===id);if(!e)return;
+  e.sueldo=parseFloat(document.getElementById('sueldo-'+id).value)||0;
+  save();renderDash();renderEquipo();renderProyeccion();
 }
 
 // ─── RENDER GASTOS ───────────────────────────────────────────────────────────
