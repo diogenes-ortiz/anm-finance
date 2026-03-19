@@ -413,7 +413,7 @@ tr:hover td{background:rgba(26,115,232,.03)}
         <div id="mrr-total" style="font-size:13px;font-weight:800;color:var(--green)"></div>
       </div>
       <table>
-        <thead><tr><th>Cliente</th><th>Tipo de Servicio</th><th>Servicios Acordados</th><th>Equipo asignado</th><th>Retainer/mes</th><th>Estado</th><th></th></tr></thead>
+        <thead><tr><th>Cliente</th><th>Tipo</th><th>Servicios</th><th>Equipo</th><th>Retainer/mes</th><th>Inicio</th><th>Estado</th><th></th></tr></thead>
         <tbody id="tbody-clientes"></tbody>
       </table>
     </div>
@@ -661,7 +661,10 @@ tr:hover td{background:rgba(26,115,232,.03)}
       <div class="fr"><label>Moneda</label><select id="mc-moneda"><option>ARS</option><option>USD</option><option>EUR</option></select></div>
     </div>
     <div class="fr"><label>Contacto</label><input id="mc-contacto" placeholder="Nombre contacto"></div>
-    <div class="fr"><label>Estado</label><select id="mc-estado"><option value="activo">Activo</option><option value="pausado">Pausado</option><option value="potencial">Potencial</option></select></div>
+    <div class="fg">
+      <div class="fr"><label>Estado</label><select id="mc-estado"><option value="activo">Activo</option><option value="pausado">Pausado</option><option value="potencial">Potencial</option></select></div>
+      <div class="fr"><label>Inicio de servicio</label><input id="mc-inicio" type="month" value="${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}"></div>
+    </div>
     <div class="mact">
       <button class="btn bg" onclick="closeModal('m-cliente')">Cancelar</button>
       <button class="btn bp" onclick="addCliente()">Guardar</button>
@@ -877,6 +880,12 @@ function fmt(n,cur){if(!n)n=0;const s=cur==='USD'?'U$S ':cur==='EUR'?'€':'$';r
 function ini(n){return(n||'?').split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();}
 function getQ(id){return S.clientes.find(c=>c.id===id);}
 function getE(id){return S.empleados.find(e=>e.id===id);}
+// Formatea 'YYYY-MM' → 'Sep 2025'
+function fmtMes(ym){
+  if(!ym)return'—';
+  const [y,m]=ym.split('-');
+  return(MONTHS[parseInt(m)]||'?')+' '+y;
+}
 function retainer(c){
   // Si tiene historial, buscar el monto vigente para S.mes/S.anio
   if(c.retainerHistory&&c.retainerHistory.length){
@@ -984,12 +993,15 @@ function getNetoMes(){
 // ─── ADDS / DELETES ──────────────────────────────────────────────────────────
 function addCliente(){
   const n=document.getElementById('mc-nombre').value.trim();if(!n)return alert('Nombre requerido');
+  const monto=parseFloat(document.getElementById('mc-retainer').value)||0;
+  const inicio=document.getElementById('mc-inicio').value;
   S.clientes.push({id:Date.now(),nombre:n,tipo:document.getElementById('mc-tipo').value,
     servicios:document.getElementById('mc-servicios').value.trim(),
-    retainer:parseFloat(document.getElementById('mc-retainer').value)||0,
-    moneda:document.getElementById('mc-moneda').value,
+    retainer:monto,moneda:document.getElementById('mc-moneda').value,
     contacto:document.getElementById('mc-contacto').value.trim(),
     estado:document.getElementById('mc-estado').value,
+    inicioServicio:inicio||null,
+    retainerHistory:[{monto,desde:inicio||`${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}`,nota:'Inicial'}],
     empleadoIds:[],presupuesto:null});
   ['mc-nombre','mc-servicios','mc-retainer','mc-contacto'].forEach(x=>document.getElementById(x).value='');
   save();closeModal('m-cliente');render();
@@ -1412,15 +1424,17 @@ function renderClientes(){
   else if(clienteTab==='otros')lista=lista.filter(c=>!['rrss','pauta','rrss+pauta'].includes(c.tipo));
   const total=S.clientes.filter(c=>c.estado==='activo').reduce((s,c)=>s+retainer(c),0);
   const el=document.getElementById('mrr-total');if(el)el.textContent='Recurrente: '+fmt(total);
-  if(!lista.length){tb.innerHTML='<tr><td colspan="7"><div class="empty">Sin clientes.</div></td></tr>';return;}
+  if(!lista.length){tb.innerHTML='<tr><td colspan="8"><div class="empty">Sin clientes.</div></td></tr>';return;}
   tb.innerHTML=lista.map(c=>{
     const eNames=(c.empleadoIds||[]).map(eid=>{const e=getE(eid);return e?`<span class="badge b-bl" style="margin-right:3px">${e.nombre}</span>`:''}).join('');
+    const inicio=fmtMes(c.inicioServicio);
     return`<tr>
       <td><strong>${c.nombre}</strong>${c.contacto?`<br><span style="font-size:10px;color:var(--text2)">${c.contacto}</span>`:''}</td>
       <td><span class="badge ${TIPO_BADGE[c.tipo]||'b-gr'}">${TIPO_LABEL[c.tipo]||c.tipo}</span></td>
-      <td style="font-size:11px;color:var(--text2);max-width:180px">${c.servicios||'—'}</td>
+      <td style="font-size:11px;color:var(--text2);max-width:160px">${c.servicios||'—'}</td>
       <td>${eNames||'<span style="color:var(--text3)">Sin asignar</span>'}</td>
       <td><strong>${fmt(retainer(c),c.moneda)}</strong></td>
+      <td style="font-size:11px;color:var(--text2);white-space:nowrap">${inicio}</td>
       <td><span class="badge ${c.estado==='activo'?'b-g':c.estado==='pausado'?'b-y':'b-gr'}">${c.estado}</span></td>
       <td><button class="btn bd bsm" onclick="delCliente(${c.id})">✕</button></td>
     </tr>`;
@@ -1842,6 +1856,10 @@ function renderConfig(){
       <div class="cfservices" style="margin-bottom:12px">
         <textarea id="srv-${c.id}" onchange="saveSrv(${c.id})" placeholder="Ej: 3 posts/sem, stories, reels×2, reportes...">${c.servicios||''}</textarea>
       </div>
+      <div class="cflabel" style="margin-bottom:5px">Inicio de servicio</div>
+      <div style="margin-bottom:14px">
+        <input type="month" id="inicio-${c.id}" value="${c.inicioServicio||''}" onchange="saveInicio(${c.id})" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-family:Montserrat,sans-serif;font-size:13px;outline:none;width:100%">
+      </div>
       <div class="cflabel">Equipo asignado (clic para asignar/desasignar)</div>
       <div class="tags-wrap">${empTags||'<span style="color:var(--text3);font-size:11px">Sin equipo</span>'}</div>
     </div>`;
@@ -1885,6 +1903,11 @@ function saveSrv(id){
   c.servicios=document.getElementById('srv-'+id).value;
   save();renderClientes();renderCobros();
 }
+function saveInicio(id){
+  const c=S.clientes.find(x=>x.id===id);if(!c)return;
+  c.inicioServicio=document.getElementById('inicio-'+id).value;
+  save();renderClientes();
+}
 
 function resetData(){
   if(!confirm('¿Resetear TODO?'))return;
@@ -1915,11 +1938,11 @@ function initSeed(){
   if(S.clientes&&S.clientes.length)return;
 
   S.clientes=[
-    {id:101,nombre:'Mipileta', tipo:'rrss',     servicios:'Community management, contenido, reels',retainer:1700000,moneda:'ARS',contacto:'',estado:'activo',empleadoIds:[204,205],presupuesto:null},
-    {id:102,nombre:'Modulo',   tipo:'rrss',     servicios:'Community management, contenido mensual',retainer:420000,moneda:'ARS',contacto:'',estado:'activo',empleadoIds:[203],presupuesto:null},
-    {id:103,nombre:'Coarmi',   tipo:'pauta',    servicios:'Gestión de pauta Meta + Google',retainer:250000,moneda:'ARS',contacto:'',estado:'activo',empleadoIds:[203],presupuesto:null},
-    {id:104,nombre:'Antquera', tipo:'rrss',     servicios:'Community management, contenido, reels',retainer:1350000,moneda:'ARS',contacto:'',estado:'activo',empleadoIds:[205],presupuesto:null},
-    {id:105,nombre:'Froz',     tipo:'rrss',     servicios:'Redes sociales completas',retainer:800000,moneda:'ARS',contacto:'',estado:'activo',empleadoIds:[],presupuesto:null},
+    {id:101,nombre:'Mipileta', tipo:'rrss',     servicios:'Community management, contenido, reels',retainer:1700000,moneda:'ARS',contacto:'',estado:'activo',empleadoIds:[204,205],presupuesto:null,inicioServicio:'2025-09'},
+    {id:102,nombre:'Modulo',   tipo:'rrss',     servicios:'Community management, contenido mensual',retainer:420000,moneda:'ARS',contacto:'',estado:'activo',empleadoIds:[203],presupuesto:null,inicioServicio:'2025-09'},
+    {id:103,nombre:'Coarmi',   tipo:'pauta',    servicios:'Gestión de pauta Meta + Google',retainer:250000,moneda:'ARS',contacto:'',estado:'activo',empleadoIds:[203],presupuesto:null,inicioServicio:'2025-09'},
+    {id:104,nombre:'Antquera', tipo:'rrss',     servicios:'Community management, contenido, reels',retainer:1350000,moneda:'ARS',contacto:'',estado:'activo',empleadoIds:[205],presupuesto:null,inicioServicio:'2025-09'},
+    {id:105,nombre:'Froz',     tipo:'rrss',     servicios:'Redes sociales completas',retainer:800000,moneda:'ARS',contacto:'',estado:'activo',empleadoIds:[],presupuesto:null,inicioServicio:'2026-03'},
   ];
 
   S.empleados=[
