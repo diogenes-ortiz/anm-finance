@@ -1356,13 +1356,21 @@ function renderDashEquipo(dioAmt=0,santiAmt=0){
     }
 
     // X para marcar/desmarcar "no trabajó este mes"
-    const skipBtn=activo?`<button onclick="toggleSkip(${e.id})" title="${skipped?'Reactivar para este mes':'No trabajó este mes'}" style="
-      background:${skipped?'rgba(26,115,232,.12)':'rgba(255,255,255,.05)'};
-      border:1px solid ${skipped?'rgba(26,115,232,.3)':'var(--border)'};
-      color:${skipped?'var(--blue-l)':'var(--text3)'};
-      border-radius:7px;padding:5px 10px;font-size:13px;font-weight:700;
-      cursor:pointer;font-family:Montserrat,sans-serif;transition:all .15s
-    ">${skipped?'↩':'✕'}</button>`:'';
+    const skipBtn=activo
+      ? `<button onclick="toggleSkip(${e.id})" title="${skipped?'Reactivar para este mes':'No trabajó este mes'}" style="
+          background:${skipped?'rgba(26,115,232,.12)':'rgba(255,255,255,.05)'};
+          border:1px solid ${skipped?'rgba(26,115,232,.3)':'var(--border)'};
+          color:${skipped?'var(--blue-l)':'var(--text3)'};
+          border-radius:7px;padding:5px 10px;font-size:13px;font-weight:700;
+          cursor:pointer;font-family:Montserrat,sans-serif;transition:all .15s
+        ">${skipped?'↩':'✕'}</button>`
+      : !esSocio
+        ? `<button onclick="toggleSkip(${e.id})" title="Ocultar del mes" style="
+            background:rgba(255,255,255,.05);border:1px solid var(--border);
+            color:var(--text3);border-radius:7px;padding:5px 10px;font-size:13px;font-weight:700;
+            cursor:pointer;font-family:Montserrat,sans-serif;transition:all .15s
+          ">✕</button>`
+        : '';
 
     return`<tr style="${esActivo?'':'opacity:.5'}">
       <td><div class="erow">
@@ -1381,7 +1389,10 @@ function renderDashEquipo(dioAmt=0,santiAmt=0){
     </tr>`;
   };
 
-  const totalNomina=empleados.reduce((s,e)=>s+getSueldoEnMes(e),0);
+  // Total excluye los skipped
+  const totalNomina=empleados
+    .filter(e=>!(S.skips||[]).includes(`skip-${e.id}-${S.mes}-${S.anio}`))
+    .reduce((s,e)=>s+getSueldoEnMes(e),0);
 
   tb.innerHTML=
     empleados.map(e=>rowEmp(e,false,0)).join('')+
