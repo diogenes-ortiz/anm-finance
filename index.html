@@ -575,6 +575,21 @@ tr:hover td{background:rgba(26,115,232,.03)}
   </div>
 </div>
 
+<!-- Modal Extra Ingreso -->
+<div class="mo" id="m-extra">
+  <div class="modal" style="width:360px">
+    <div class="mtitle">+ Ingreso extra</div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:14px">Se suma al retainer de <strong id="ex-nombre" style="color:var(--text)"></strong> solo en este mes.</div>
+    <input id="ex-cid" type="hidden">
+    <div class="fr"><label>Descripción del servicio</label><input id="ex-desc" placeholder="Ej: Campaña especial, Sesión de fotos..."></div>
+    <div class="fr"><label>Monto (ARS)</label><input id="ex-monto" type="number" placeholder="0"></div>
+    <div class="mact">
+      <button class="btn bg" onclick="closeModal('m-extra')">Cancelar</button>
+      <button class="btn bp" onclick="guardarExtra()">Agregar</button>
+    </div>
+  </div>
+</div>
+
 </main>
 
 <!-- ═══════════════ MODALS ═══════════════ -->
@@ -879,7 +894,14 @@ function togglePagoEq(id){
 }
 
 // ─── CALCS ───────────────────────────────────────────────────────────────────
-function getMRR(){return S.clientes.filter(c=>c.estado==='activo').reduce((s,c)=>s+retainer(c),0);}
+function getMRR(){
+  if(!S.clientesPausados)S.clientesPausados=[];
+  if(!S.extras)S.extras=[];
+  const activos=S.clientes.filter(c=>c.estado==='activo'&&!clientePausadoMes(c.id));
+  const retainers=activos.reduce((s,c)=>s+retainer(c),0);
+  const extras=activos.reduce((s,c)=>s+getTotalExtra(c.id),0);
+  return retainers+extras;
+}
 function getNomina(){return S.empleados.filter(e=>e.estado==='activo').reduce((s,e)=>s+(e.sueldo||0),0);}
 function getGastosFijos(){return S.gastos.reduce((s,g)=>{if(g.frecuencia==='mensual')return s+g.monto;if(g.frecuencia==='anual')return s+g.monto/12;return s;},0);}
 // One-shots: solo páginas web, branding y presentaciones
@@ -1204,24 +1226,107 @@ function renderDashCharts(){
 }
 
 // ─── RENDER COBROS ───────────────────────────────────────────────────────────
+
+// Key para extras de un cliente en un mes específico
+function extraKey(cid){return`extra-${cid}-${S.mes}-${S.anio}`;}
+function getExtras(cid){return(S.extras||[]).filter(x=>x.key===extraKey(cid));}
+function getTotalExtra(cid){return getExtras(cid).reduce((s,x)=>s+x.monto,0);}
+
+// Key para pausar un cliente en un mes específico
+function clientePausadoMes(cid){return(S.clientesPausados||[]).includes(`cp-${cid}-${S.mes}-${S.anio}`);}
+function toggleClienteMes(cid){
+  if(!S.clientesPausados)S.clientesPausados=[];
+  const k=`cp-${cid}-${S.mes}-${S.anio}`;
+  const i=S.clientesPausados.indexOf(k);
+  if(i>=0)S.clientesPausados.splice(i,1);else S.clientesPausados.push(k);
+  save();renderCobros();renderDash();
+}
+
+function abrirAgregarExtra(cid,nombre){
+  document.getElementById('ex-cid').value=cid;
+  document.getElementById('ex-nombre').textContent=nombre;
+  document.getElementById('ex-desc').value='';
+  document.getElementById('ex-monto').value='';
+  openModal('m-extra');
+}
+function guardarExtra(){
+  const cid=parseInt(document.getElementById('ex-cid').value);
+  const monto=parseFloat(document.getElementById('ex-monto').value)||0;
+  const desc=document.getElementById('ex-desc').value.trim()||'Servicio extra';
+  if(!monto)return alert('Ingresá el monto');
+  if(!S.extras)S.extras=[];
+  S.extras.push({id:Date.now(),key:extraKey(cid),cid,monto,desc,mes:S.mes,anio:S.anio});
+  save();closeModal('m-extra');renderCobros();renderDash();
+}
+function borrarExtra(id){
+  S.extras=(S.extras||[]).filter(x=>x.id!==id);
+  save();renderCobros();renderDash();
+}
+
 function renderCobros(){
-  const activos=S.clientes.filter(c=>c.estado==='activo');
+  if(!S.clientesPausados)S.clientesPausados=[];
+  if(!S.extras)S.extras=[];
+
+  // Solo mostrar activos Y no pausados en este mes
+  const todos=S.clientes.filter(c=>c.estado==='activo');
+  const visibles=todos.filter(c=>!clientePausadoMes(c.id));
+  const pausados=todos.filter(c=>clientePausadoMes(c.id));
+
   let cob=0,pen=0;
-  activos.forEach(c=>{const a=retainer(c);if(isPagadoC(c.id))cob+=a;else pen+=a;});
+  visibles.forEach(c=>{
+    const a=retainer(c)+getTotalExtra(c.id);
+    if(isPagadoC(c.id))cob+=a;else pen+=a;
+  });
   const setV=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
   setV('c-cobrado',fmt(cob));setV('c-pendiente',fmt(pen));setV('c-total',fmt(cob+pen));
   const grid=document.getElementById('cobros-grid');if(!grid)return;
-  if(!activos.length){grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text2)">Sin clientes activos.</div>';return;}
-  grid.innerHTML=activos.map(c=>{
-    const a=retainer(c),p=isPagadoC(c.id),fact=isFacturado(c.id);
+
+  if(!todos.length){grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text2)">Sin clientes activos.</div>';return;}
+
+  const renderCard=(c,pausado)=>{
+    const extras=getExtras(c.id);
+    const totalExtra=extras.reduce((s,x)=>s+x.monto,0);
+    const a=retainer(c)+totalExtra;
+    const p=isPagadoC(c.id);
+    const fact=isFacturado(c.id);
     const eNames=(c.empleadoIds||[]).map(eid=>{const e=getE(eid);return e?e.nombre:'?';}).join(', ');
+
+    if(pausado){
+      return`<div class="cc" style="opacity:.5;border:1px dashed var(--border)">
+        <div class="cctop">
+          <div><div class="ccname" style="color:var(--text2)">${c.nombre}</div><div class="ccserv">No estuvo este mes</div></div>
+          <div style="font-size:11px;color:var(--text3)">${fmt(retainer(c))}</div>
+        </div>
+        <button onclick="toggleClienteMes(${c.id})" style="width:100%;padding:7px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:Montserrat,sans-serif;background:var(--surface2);border:1px dashed var(--border);color:var(--text2)">
+          ↩ Reactivar para este mes
+        </button>
+      </div>`;
+    }
+
     return`<div class="cc ${p?'pagado':'pendiente'}">
       <div class="cctop">
         <div><div class="ccname">${c.nombre}</div><div class="ccserv">${TIPO_LABEL[c.tipo]||c.tipo}</div></div>
-        <div class="ccamt" style="color:${p?'var(--green)':'var(--yellow)'}">${fmt(a,c.moneda)}</div>
+        <div>
+          <div class="ccamt" style="color:${p?'var(--green)':'var(--yellow)'}">${fmt(a,c.moneda)}</div>
+          ${totalExtra?`<div style="font-size:9px;color:var(--text3);text-align:right">Retainer ${fmt(retainer(c))} + Extra ${fmt(totalExtra)}</div>`:''}
+        </div>
       </div>
       ${eNames?`<div style="font-size:10px;color:var(--text2)">👤 ${eNames}</div>`:''}
       ${c.servicios?`<div style="font-size:10px;color:var(--text3);font-style:italic;line-height:1.4">${c.servicios}</div>`:''}
+
+      ${extras.length?`<div style="margin:6px 0;display:flex;flex-direction:column;gap:3px">
+        ${extras.map(x=>`<div style="display:flex;justify-content:space-between;align-items:center;background:rgba(26,115,232,.08);border-radius:6px;padding:4px 10px;font-size:11px">
+          <span style="color:var(--blue-l)">➕ ${x.desc}</span>
+          <span style="font-weight:700;color:var(--blue-l)">${fmt(x.monto)}</span>
+          <button onclick="borrarExtra(${x.id})" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:12px;padding:0 2px">✕</button>
+        </div>`).join('')}
+      </div>`:''}
+
+      <div style="display:flex;gap:6px;margin-bottom:6px">
+        <button onclick="abrirAgregarExtra(${c.id},'${c.nombre.replace(/'/g,"\\'")}')" style="flex:1;padding:7px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:Montserrat,sans-serif;background:var(--surface2);border:1px dashed var(--border);color:var(--text2)">+ Ingreso extra este mes</button>
+        <button onclick="toggleClienteMes(${c.id})" title="Sacar del mes" style="padding:7px 10px;border-radius:8px;font-size:12px;cursor:pointer;font-family:Montserrat,sans-serif;background:var(--surface2);border:1px dashed var(--border);color:var(--text3)">✕ No estuvo</button>
+      </div>
+
       <button onclick="toggleFactura(${c.id})" style="
         width:100%;padding:8px;border-radius:8px;font-size:11px;font-weight:700;
         cursor:pointer;font-family:Montserrat,sans-serif;transition:all .15s;
@@ -1232,7 +1337,15 @@ function renderCobros(){
       ">${fact?'✓ Factura enviada':'📄 Marcar factura como enviada'}</button>
       <button class="tpago ${p?'pagado':'pendiente'}" onclick="toggleCobro(${c.id})">${p?'✓ Cobrado — clic para desmarcar':'⏳ Pendiente — marcar como cobrado'}</button>
     </div>`;
-  }).join('');
+  };
+
+  grid.innerHTML=visibles.map(c=>renderCard(c,false)).join('');
+
+  // Pausados al final, más discretos
+  if(pausados.length){
+    grid.innerHTML+=`<div style="grid-column:1/-1;font-size:10px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;font-weight:700;margin-top:8px;margin-bottom:4px">No estuvieron este mes</div>`;
+    grid.innerHTML+=pausados.map(c=>renderCard(c,true)).join('');
+  }
 }
 
 // ─── RENDER CLIENTES ─────────────────────────────────────────────────────────
@@ -1770,6 +1883,8 @@ if(!S.cobros)S.cobros=[];
 if(!S.pagosEq)S.pagosEq=[];
 if(!S.skips)S.skips=[];
 if(!S.facturas)S.facturas=[];
+if(!S.extras)S.extras=[];
+if(!S.clientesPausados)S.clientesPausados=[];
 if(!S.clientes||!S.clientes.length)S={clientes:[],proyectos:[],empleados:[],gastos:[],cobros:[],pagosEq:[],skips:[],facturas:[],cotizacion:1500,fondoUSD:1047.75,mes:2,anio:2026};
 initSeed();
 setTimeout(()=>{
