@@ -180,14 +180,60 @@ tr:hover td{background:rgba(26,115,232,.03)}
 .chart3{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:16px;margin-bottom:18px}
 /* NETO HIGHLIGHT */
 .neto-box{background:linear-gradient(135deg,rgba(26,115,232,.15) 0%,rgba(26,115,232,.05) 100%);border:1px solid rgba(26,115,232,.3);border-radius:var(--r);padding:18px 20px}
+
+/* ── HAMBURGER ── */
+.hamburger{display:none;position:fixed;top:14px;left:14px;z-index:200;background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:8px 10px;cursor:pointer;flex-direction:column;gap:4px}
+.hamburger span{display:block;width:20px;height:2px;background:var(--text);border-radius:2px;transition:all .2s}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99;backdrop-filter:blur(2px)}
+
+/* ── MOBILE ── */
+@media(max-width:768px){
+  :root{--sidebar:0px}
+  .sidebar{transform:translateX(-100%);transition:transform .25s;width:240px;z-index:150}
+  .sidebar.open{transform:translateX(0)}
+  .sidebar-overlay.open{display:block}
+  .hamburger{display:flex}
+  .main{margin-left:0}
+  .topbar{padding:14px 16px 14px 54px}
+  .content{padding:16px 14px}
+  .crow.c4{grid-template-columns:1fr 1fr}
+  .crow.c3{grid-template-columns:1fr 1fr}
+  .crow.c2{grid-template-columns:1fr}
+  .twocol{grid-template-columns:1fr}
+  .chart3{grid-template-columns:1fr}
+  .cgrid{grid-template-columns:1fr 1fr}
+  .cfgrid{grid-template-columns:1fr}
+  .fg{grid-template-columns:1fr}
+  .neto-box{padding:14px}
+  .cval{font-size:18px}
+  table{font-size:11px}
+  th,td{padding:8px 10px}
+  .proj-pago-emp{display:none}
+  .proj-pago-fecha{width:70px}
+  .mnav .mlabel{min-width:100px;font-size:11px}
+  .ptitle{font-size:15px}
+  /* socios stack */
+  .card[style*="display:flex;align-items:center"]{flex-wrap:wrap}
+}
+@media(max-width:480px){
+  .crow.c4{grid-template-columns:1fr}
+  .crow.c3{grid-template-columns:1fr}
+  .cgrid{grid-template-columns:1fr}
+  .tabs{flex-wrap:wrap}
+}
 </style>
 </head>
 <body>
 
+<div class="sidebar-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
+<button class="hamburger" id="hamburger" onclick="toggleSidebar()">
+  <span></span><span></span><span></span>
+</button>
+
 <aside class="sidebar">
   <div class="logo">
-    <div class="logo-anm">ANM</div>
-    <div class="logo-sub">Content Studio · Finance</div>
+    <img src="https://diogenes-ortiz.github.io/anm-finance/Logo_anm_content_studio.jpg" alt="ANM Content Studio" style="width:160px;border-radius:8px;display:block;margin-bottom:6px">
+    <div class="logo-sub" style="margin-top:2px">Finance</div>
     <div id="sync-status" style="font-size:9px;margin-top:6px;font-weight:700;color:var(--text3);transition:color .3s">💾 Local</div>
   </div>
   <nav class="nav">
@@ -238,22 +284,32 @@ tr:hover td{background:rgba(26,115,232,.03)}
     <!-- KPIs socios -->
     <div class="crow c2" style="margin-bottom:20px">
       <div class="card" style="display:flex;align-items:center;gap:18px;padding:14px 18px">
-        <div class="av" style="background:#1A73E8;color:#fff;width:40px;height:40px;font-size:14px">DIO</div>
-        <div style="flex:1">
+        <div class="av" style="background:#1A73E8;color:#fff;width:40px;height:40px;font-size:14px;flex-shrink:0">DIO</div>
+        <div style="flex:1;min-width:0">
           <div class="clabel" style="margin-bottom:4px">Le toca a Dio este mes (40%)</div>
           <div class="cval col-b" id="d-dio">$0</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:5px;flex-wrap:wrap">
+            <div style="font-size:11px;color:var(--green);font-weight:700">✓ Cobrado: <span id="d-dio-real">$0</span></div>
+            <div style="font-size:10px;color:var(--text3)">·</div>
+            <div style="font-size:11px;color:var(--yellow);font-weight:700">⏳ Pendiente: <span id="d-dio-pend">$0</span></div>
+          </div>
           <div id="d-dio-breakdown" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:5px"></div>
         </div>
-        <div style="text-align:right"><div style="font-size:28px;font-weight:900;color:rgba(26,115,232,.25)">40%</div></div>
+        <div style="text-align:right;flex-shrink:0"><div style="font-size:28px;font-weight:900;color:rgba(26,115,232,.25)">40%</div></div>
       </div>
       <div class="card" style="display:flex;align-items:center;gap:18px;padding:14px 18px">
-        <div class="av" style="background:#4d96ff;color:#fff;width:40px;height:40px;font-size:14px">SAN</div>
-        <div style="flex:1">
+        <div class="av" style="background:#4d96ff;color:#fff;width:40px;height:40px;font-size:14px;flex-shrink:0">SAN</div>
+        <div style="flex:1;min-width:0">
           <div class="clabel" style="margin-bottom:4px">Le toca a Santi este mes (40%)</div>
           <div class="cval col-b" id="d-santi">$0</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:5px;flex-wrap:wrap">
+            <div style="font-size:11px;color:var(--green);font-weight:700">✓ Cobrado: <span id="d-santi-real">$0</span></div>
+            <div style="font-size:10px;color:var(--text3)">·</div>
+            <div style="font-size:11px;color:var(--yellow);font-weight:700">⏳ Pendiente: <span id="d-santi-pend">$0</span></div>
+          </div>
           <div id="d-santi-breakdown" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:5px"></div>
         </div>
-        <div style="text-align:right"><div style="font-size:28px;font-weight:900;color:rgba(77,150,255,.25)">40%</div></div>
+        <div style="text-align:right;flex-shrink:0"><div style="font-size:28px;font-weight:900;color:rgba(77,150,255,.25)">40%</div></div>
       </div>
     </div>
 
@@ -765,11 +821,20 @@ function getE(id){return S.empleados.find(e=>e.id===id);}
 function retainer(c){return c.presupuesto??c.retainer??0;}
 
 // ─── NAV ─────────────────────────────────────────────────────────────────────
+function toggleSidebar(){
+  document.querySelector('.sidebar').classList.toggle('open');
+  document.getElementById('sb-overlay').classList.toggle('open');
+}
+function closeSidebar(){
+  document.querySelector('.sidebar').classList.remove('open');
+  document.getElementById('sb-overlay').classList.remove('open');
+}
 function goTo(page,el){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   if(el)el.classList.add('active');
+  closeSidebar();
   renderPage(page);
 }
 function openModal(id){document.getElementById(id).classList.add('open');}
@@ -987,6 +1052,18 @@ function renderDash(){
   setV('d-neto-sub','Margen '+margen+'% · Socios 80% → '+fmt(Math.round(neto*0.8))+' · Agencia 20% → '+fmt(Math.round(neto*0.2)));
   setV('d-pendiente',fmt(pendiente));setV('d-pendiente-sub',pendN+' cliente'+(pendN!==1?'s':'')+' sin cobrar');
   setV('d-dio',fmt(dio));setV('d-santi',fmt(santi));
+
+  // Cobrado real vs pendiente para socios
+  // Real = solo clientes que ya pagaron este mes
+  const realCobrado=activos.filter(c=>isPagadoC(c.id)).reduce((s,c)=>s+retainer(c),0);
+  const osMes=getOneShotsMes();
+  const ingReal=realCobrado+osMes;
+  const netoReal=ingReal-costos;
+  const dioReal=Math.max(0,Math.round(netoReal*0.4));
+  const dioPend=Math.max(0,dio-dioReal);
+  const setS=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  setS('d-dio-real',fmt(dioReal));setS('d-dio-pend',fmt(dioPend));
+  setS('d-santi-real',fmt(dioReal));setS('d-santi-pend',fmt(dioPend));
 
   // Client breakdown chips — green if paid, red if not yet
   const activos=S.clientes.filter(c=>c.estado==='activo');
