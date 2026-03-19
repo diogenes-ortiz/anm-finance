@@ -703,6 +703,38 @@ tr:hover td{background:rgba(26,115,232,.03)}
 
 </main>
 
+<!-- Modal: Agregar empleado al mes -->
+<div class="mo" id="m-emp-mes">
+  <div class="modal" style="width:360px">
+    <div class="mtitle">Agregar empleado a <span id="emm-mes-label" style="color:var(--blue)"></span></div>
+    <div class="fr"><label>Empleada</label>
+      <select id="emm-emp" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-family:Montserrat,sans-serif;font-size:13px;outline:none;width:100%"></select>
+    </div>
+    <div class="fr"><label>Cliente asignado este mes</label>
+      <select id="emm-cliente" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-family:Montserrat,sans-serif;font-size:13px;outline:none;width:100%"></select>
+    </div>
+    <div class="mact">
+      <button class="btn bg" onclick="closeModal('m-emp-mes')">Cancelar</button>
+      <button class="btn bp" onclick="guardarEmpMes()">Agregar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Editar cliente de empleado este mes -->
+<div class="mo" id="m-emp-cliente">
+  <div class="modal" style="width:360px">
+    <div class="mtitle">Cliente de <span id="emc-nombre" style="color:var(--blue)"></span> este mes</div>
+    <input type="hidden" id="emc-emp-id">
+    <div class="fr"><label>Cliente asignado este mes</label>
+      <select id="emc-cliente" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-family:Montserrat,sans-serif;font-size:13px;outline:none;width:100%"></select>
+    </div>
+    <div class="mact">
+      <button class="btn bg" onclick="closeModal('m-emp-cliente')">Cancelar</button>
+      <button class="btn bp" onclick="guardarClienteOverride()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <!-- ═══════════════ MODALS ═══════════════ -->
 
 <!-- Modal Cliente -->
@@ -1318,14 +1350,76 @@ function renderDash(){
   renderDashEquipo(dio,santi);
 }
 
+// ─── EXTRAS EQUIPO MES ───────────────────────────────────────────────────────
+function getClienteOverride(empId){
+  if(!S.extrasEquipo)S.extrasEquipo=[];
+  const k=`co-${empId}-${S.mes}-${S.anio}`;
+  return S.extrasEquipo.find(x=>x.key===k)||null;
+}
+function abrirAgregarEmpMes(){
+  if(!S.extrasEquipo)S.extrasEquipo=[];
+  const label=MONTHS[S.mes]+' '+S.anio;
+  document.getElementById('emm-mes-label').textContent=label;
+  // Poblar empleados — todos menos socios
+  const sel=document.getElementById('emm-emp');
+  sel.innerHTML=S.empleados
+    .filter(e=>!['Dio','Santi'].includes(e.nombre))
+    .map(e=>`<option value="${e.id}">${e.nombre}</option>`).join('');
+  // Poblar clientes
+  const selC=document.getElementById('emm-cliente');
+  selC.innerHTML=`<option value="">Sin cliente asignado</option>`+
+    S.clientes.filter(c=>c.estado==='activo').map(c=>`<option value="${c.id}">${c.nombre}</option>`).join('');
+  openModal('m-emp-mes');
+}
+function guardarEmpMes(){
+  if(!S.extrasEquipo)S.extrasEquipo=[];
+  const empId=parseInt(document.getElementById('emm-emp').value);
+  const clienteId=document.getElementById('emm-cliente').value;
+  const kExtra=`extra-emp-${empId}-${S.mes}-${S.anio}`;
+  const kCliente=`co-${empId}-${S.mes}-${S.anio}`;
+  // Forzar que aparezca este mes aunque esté fuera de rango — usando un skip reverso
+  // Guardamos como "extra del mes" si no está ya
+  if(!S.extrasEquipo.find(x=>x.key===kExtra)){
+    S.extrasEquipo.push({key:kExtra,empId,mes:S.mes,anio:S.anio,tipo:'add'});
+  }
+  // Guardar override de cliente
+  const idx=S.extrasEquipo.findIndex(x=>x.key===kCliente);
+  if(idx>=0)S.extrasEquipo[idx].clienteId=clienteId?parseInt(clienteId):null;
+  else S.extrasEquipo.push({key:kCliente,empId,mes:S.mes,anio:S.anio,tipo:'cliente',clienteId:clienteId?parseInt(clienteId):null});
+  save();closeModal('m-emp-mes');renderDash();
+}
+function abrirEditarClienteEmp(empId,nombre){
+  document.getElementById('emc-emp-id').value=empId;
+  document.getElementById('emc-nombre').textContent=nombre;
+  const override=getClienteOverride(empId);
+  const selC=document.getElementById('emc-cliente');
+  selC.innerHTML=`<option value="">Sin cliente asignado</option>`+
+    S.clientes.filter(c=>c.estado==='activo').map(c=>`<option value="${c.id}" ${override&&override.clienteId===c.id?'selected':''}>${c.nombre}</option>`).join('');
+  openModal('m-emp-cliente');
+}
+function guardarClienteOverride(){
+  if(!S.extrasEquipo)S.extrasEquipo=[];
+  const empId=parseInt(document.getElementById('emc-emp-id').value);
+  const clienteId=document.getElementById('emc-cliente').value;
+  const k=`co-${empId}-${S.mes}-${S.anio}`;
+  const idx=S.extrasEquipo.findIndex(x=>x.key===k);
+  if(idx>=0)S.extrasEquipo[idx].clienteId=clienteId?parseInt(clienteId):null;
+  else S.extrasEquipo.push({key:k,empId,mes:S.mes,anio:S.anio,tipo:'cliente',clienteId:clienteId?parseInt(clienteId):null});
+  save();closeModal('m-emp-cliente');renderDash();
+}
+
 function renderDashEquipo(dioAmt=0,santiAmt=0){
   const el=document.getElementById('d-mes-eq');if(el)el.textContent=MONTHS[S.mes]+' '+S.anio;
   const tb=document.getElementById('d-eq-tbody');if(!tb)return;
   const last=new Date(S.anio,S.mes+1,0).getDate();
   if(!S.skips)S.skips=[];
 
-  // Solo mostrar empleados que trabajaban en este mes
-  const empleados=S.empleados.filter(e=>!['Dio','Santi'].includes(e.nombre)&&empleadoActivoEnMes(e));
+  if(!S.extrasEquipo)S.extrasEquipo=[];
+  // Empleados normales del mes + extras agregados manualmente
+  const empNormales=S.empleados.filter(e=>!['Dio','Santi'].includes(e.nombre)&&empleadoActivoEnMes(e));
+  const empExtrasKeys=S.extrasEquipo.filter(x=>x.tipo==='add'&&x.mes===S.mes&&x.anio===S.anio).map(x=>x.empId);
+  const empExtras=S.empleados.filter(e=>empExtrasKeys.includes(e.id)&&!empNormales.find(n=>n.id===e.id));
+  const empleados=[...empNormales,...empExtras];
   const socios=S.empleados.filter(e=>['Dio','Santi'].includes(e.nombre));
 
   const rowEmp=(e,esSocio,montoSocio)=>{
@@ -1334,7 +1428,20 @@ function renderDashEquipo(dioAmt=0,santiAmt=0){
     const activo=e.estado==='activo';
     const skipKey=`skip-${e.id}-${S.mes}-${S.anio}`;
     const skipped=(S.skips||[]).includes(skipKey);
-    const cNames=(e.clienteIds||[]).map(cid=>{const c=getQ(cid);return c?c.nombre:'?';}).join(', ')||'—';
+    const override=getClienteOverride(e.id);
+    let cNamesArr;
+    if(override&&override.clienteId){
+      const c=getQ(override.clienteId);
+      cNamesArr=c?[c.nombre]:['?'];
+    } else {
+      cNamesArr=(e.clienteIds||[]).map(cid=>{const c=getQ(cid);return c?c.nombre:'?';}).filter(Boolean);
+    }
+    const cNames=cNamesArr.length
+      ? cNamesArr.map(n=>`<span style="color:var(--blue-l)">${n}</span>`).join(', ')
+      : '—';
+    const cNamesCell=`<div style="display:flex;align-items:center;gap:6px;cursor:pointer" onclick="abrirEditarClienteEmp(${e.id},'${e.nombre}')" title="Editar cliente este mes">
+      ${cNames}<span style="font-size:10px;color:var(--text3)">✎</span>
+    </div>`;
     const monto=esSocio?montoSocio:getSueldoEnMes(e);
     const esActivo=(activo||!!e.finLaboral)&&!skipped;
 
@@ -1381,7 +1488,7 @@ function renderDashEquipo(dioAmt=0,santiAmt=0){
         </div>
       </div></td>
       <td><span class="badge ${esSocio?'b-bl':'b-gr'}">${esSocio?'Socio':'Empleado'}</span></td>
-      <td style="font-size:11px;color:var(--blue-l)">${cNames}</td>
+      <td style="font-size:11px;color:var(--blue-l)">${cNamesCell}</td>
       <td><strong>${fmt(monto,e.moneda)}</strong></td>
       <td style="color:var(--text2)">Día ${dia}</td>
       <td>${estadoBtn}</td>
@@ -1402,6 +1509,7 @@ function renderDashEquipo(dioAmt=0,santiAmt=0){
       </td>
       <td colspan="4" style="padding:10px 16px;background:var(--surface2);border-top:2px solid var(--border)">
         <strong style="font-size:15px;color:var(--red)">${fmt(totalNomina)}</strong>
+        <button onclick="abrirAgregarEmpMes()" style="margin-left:16px;background:var(--surface3);border:1px dashed var(--border);color:var(--text2);border-radius:7px;padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:Montserrat,sans-serif">+ Agregar empleada</button>
       </td>
     </tr>`+
     `<tr><td colspan="7" style="padding:5px 16px;background:var(--surface2);border-top:1.5px solid var(--border);border-bottom:1.5px solid var(--border)">
@@ -2282,6 +2390,7 @@ if(!S.facturas)S.facturas=[];
 if(!S.extras)S.extras=[];
 if(!S.clientesPausados)S.clientesPausados=[];
 if(!S.transferencias)S.transferencias=[];
+if(!S.extrasEquipo)S.extrasEquipo=[];
 
 // Parche: asegurar que Mile y Martu tengan finLaboral correcto aunque vengan de Supabase viejo
 if(S.empleados&&S.empleados.length){
