@@ -1,0 +1,1708 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ANM Content Studio — Finanzas</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#111113;--surface:#18181c;--surface2:#1f1f24;--surface3:#26262d;--border:#2a2a32;
+  --blue:#1A73E8;--blue-l:#4d96ff;--blue-d:rgba(26,115,232,0.14);--blue-dd:rgba(26,115,232,0.07);
+  --text:#EFEEEA;--text2:#7a7a8c;--text3:#404050;
+  --green:#2dca72;--green-d:rgba(45,202,114,0.13);
+  --red:#e8484a;--red-d:rgba(232,72,74,0.13);
+  --yellow:#e8b84a;--yellow-d:rgba(232,184,74,0.13);
+  --purple:#9b6fe8;--purple-d:rgba(155,111,232,0.13);
+  --teal:#2dcab4;--teal-d:rgba(45,202,180,0.13);
+  --r:12px;--sidebar:240px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Montserrat',sans-serif;font-size:13px;display:flex;min-height:100vh}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar);background:#0c0c0e;border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100}
+.logo{padding:20px 18px 16px;border-bottom:1px solid var(--border)}
+.logo-anm{font-size:28px;font-weight:900;color:var(--blue);letter-spacing:4px;line-height:1}
+.logo-sub{font-size:8.5px;color:var(--text3);letter-spacing:2.5px;text-transform:uppercase;margin-top:3px;font-weight:700}
+.nav{padding:10px 8px;flex:1;overflow-y:auto}
+.ns{font-size:9px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;padding:14px 10px 5px;font-weight:700}
+.ni{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:8px;cursor:pointer;color:var(--text2);font-size:12px;font-weight:600;transition:all .12s;margin-bottom:1px;border-left:2px solid transparent}
+.ni:hover{background:var(--surface2);color:var(--text)}
+.ni.active{background:var(--blue-d);color:var(--blue);border-left-color:var(--blue)}
+.ni-icon{font-size:13px;width:16px;text-align:center}
+
+/* MAIN */
+.main{margin-left:var(--sidebar);flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{padding:15px 26px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg);position:sticky;top:0;z-index:50}
+.ptitle{font-size:17px;font-weight:800;letter-spacing:-.3px}
+.content{padding:22px 26px;flex:1}
+
+/* BTNS */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:8px 15px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:none;transition:all .12s;font-family:'Montserrat',sans-serif;letter-spacing:.1px}
+.bp{background:var(--blue);color:#fff}.bp:hover{background:var(--blue-l)}
+.bg{background:var(--surface2);color:var(--text);border:1px solid var(--border)}.bg:hover{background:var(--surface3)}
+.bd{background:var(--red-d);color:var(--red);border:1px solid rgba(232,72,74,.2)}
+.bs{background:var(--green-d);color:var(--green);border:1px solid rgba(45,202,114,.25)}
+.bsm{padding:5px 10px;font-size:11px}
+
+/* MONTH NAV */
+.mnav{display:flex;align-items:center;gap:8px}
+.mb{background:var(--surface2);border:1px solid var(--border);color:var(--text2);border-radius:7px;padding:4px 12px;cursor:pointer;font-size:18px;line-height:1;transition:all .12s}
+.mb:hover{color:var(--text);border-color:var(--blue)}
+.mlabel{font-size:12px;font-weight:700;min-width:140px;text-align:center}
+
+/* CARDS */
+.crow{display:grid;gap:12px;margin-bottom:20px}
+.c4{grid-template-columns:repeat(4,1fr)}.c3{grid-template-columns:repeat(3,1fr)}.c2{grid-template-columns:repeat(2,1fr)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px}
+.ct{border-top:2px solid}
+.ct-bl{border-top-color:var(--blue)}.ct-g{border-top-color:var(--green)}
+.ct-r{border-top-color:var(--red)}.ct-y{border-top-color:var(--yellow)}
+.ct-p{border-top-color:var(--purple)}.ct-t{border-top-color:var(--teal)}
+.clabel{font-size:9.5px;color:var(--text2);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:7px;font-weight:700}
+.cval{font-size:22px;font-weight:800;letter-spacing:-.5px}
+.csub{font-size:10px;color:var(--text2);margin-top:4px;font-weight:500}
+.col-g{color:var(--green)}.col-r{color:var(--red)}.col-b{color:var(--blue)}
+.col-y{color:var(--yellow)}.col-p{color:var(--purple)}.col-t{color:var(--teal)}
+
+/* TABLE */
+.tw{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:18px}
+.th{padding:13px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.tt{font-size:12px;font-weight:800}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:9px 16px;font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:1.2px;border-bottom:1px solid var(--border);font-weight:700}
+td{padding:11px 16px;border-bottom:1px solid var(--border);font-size:12px;font-weight:500}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(26,115,232,.03)}
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700}
+.b-g{background:var(--green-d);color:var(--green)}.b-r{background:var(--red-d);color:var(--red)}
+.b-y{background:var(--yellow-d);color:var(--yellow)}.b-bl{background:var(--blue-d);color:var(--blue-l)}
+.b-gr{background:var(--surface3);color:var(--text2)}.b-p{background:var(--purple-d);color:var(--purple)}
+.b-t{background:var(--teal-d);color:var(--teal)}
+
+/* MODAL */
+.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:1000;align-items:center;justify-content:center;backdrop-filter:blur(8px)}
+.mo.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;width:520px;max-width:95vw;max-height:90vh;overflow-y:auto}
+.mtitle{font-size:15px;font-weight:800;margin-bottom:18px}
+.fr{margin-bottom:13px}
+.fr label{display:block;font-size:9px;color:var(--text2);margin-bottom:5px;text-transform:uppercase;letter-spacing:1.2px;font-weight:700}
+.fr input,.fr select,.fr textarea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 11px;color:var(--text);font-family:'Montserrat',sans-serif;font-size:13px;outline:none;transition:border-color .12s;font-weight:500}
+.fr input:focus,.fr select:focus,.fr textarea:focus{border-color:var(--blue)}
+.fr select option{background:var(--surface2)}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.mact{display:flex;gap:9px;justify-content:flex-end;margin-top:16px}
+
+/* PAGES */
+.page{display:none}.page.active{display:block}
+
+/* AVATAR */
+.av{width:32px;height:32px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0}
+.erow{display:flex;align-items:center;gap:9px}
+
+/* CHARTS */
+.ca{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;margin-bottom:18px}
+.catitle{font-size:12px;font-weight:800;margin-bottom:12px}
+
+/* COBROS CARDS */
+.cgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;margin-bottom:20px}
+.cc{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:10px;transition:all .15s}
+.cc.pagado{border-color:rgba(45,202,114,.5);background:rgba(45,202,114,.04)}
+.cc.pendiente{border-color:rgba(232,184,74,.35)}
+.cctop{display:flex;align-items:flex-start;justify-content:space-between}
+.ccname{font-size:14px;font-weight:800}
+.ccserv{font-size:10px;color:var(--text2);margin-top:2px;font-weight:500}
+.ccamt{font-size:18px;font-weight:800;letter-spacing:-.5px}
+.tpago{width:100%;padding:9px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:none;font-family:'Montserrat',sans-serif;transition:all .12s;display:flex;align-items:center;justify-content:center;gap:5px}
+.tpago.pagado{background:var(--green-d);color:var(--green);border:1px solid rgba(45,202,114,.25)}
+.tpago.pendiente{background:var(--yellow-d);color:var(--yellow);border:1px solid rgba(232,184,74,.25)}
+
+/* TABS */
+.tabs{display:flex;gap:3px;background:var(--surface2);border-radius:10px;padding:3px;width:fit-content;margin-bottom:18px}
+.tab{padding:7px 16px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;color:var(--text2);transition:all .12s}
+.tab.active{background:var(--blue);color:#fff}
+.tab:hover:not(.active){color:var(--text)}
+
+/* PROJ BARS */
+.prow{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.plabel{font-size:11px;color:var(--text2);width:65px;flex-shrink:0;font-weight:600}
+.ptrack{flex:1;background:var(--surface2);border-radius:4px;height:7px;overflow:hidden}
+.pfill{height:100%;border-radius:4px;transition:width .5s}
+.pval{font-size:11px;width:95px;text-align:right;flex-shrink:0;font-weight:700}
+
+/* TWO COL */
+.twocol{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}
+.pc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px}
+.pct{font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:14px}
+
+/* CONFIG */
+.cfsect{margin-bottom:26px}
+.cftitle{font-size:9px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:2px;margin-bottom:13px;padding-bottom:9px;border-bottom:1px solid var(--border)}
+.cfgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:13px}
+.cfcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:15px}
+.cfname{font-size:13px;font-weight:800;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.cfinline{display:flex;align-items:center;gap:7px}
+.cfinline input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--text);font-family:'Montserrat',sans-serif;font-size:13px;font-weight:700;outline:none}
+.cfinline input:focus{border-color:var(--blue)}
+.cfservices{margin-top:10px}
+.cfservices textarea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--text);font-family:'Montserrat',sans-serif;font-size:12px;font-weight:500;outline:none;resize:vertical;min-height:60px}
+.cfservices textarea:focus{border-color:var(--blue)}
+.cflabel{font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:5px}
+
+/* CHECKTAG */
+.checktag{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text2);transition:all .12s;user-select:none}
+.checktag.on{background:var(--blue-d);border-color:rgba(26,115,232,.4);color:var(--blue-l)}
+.tags-wrap{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+
+.proj-group{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:14px;overflow:hidden}
+.proj-group-header{padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;transition:background .12s}
+.proj-group-header:hover{background:var(--surface2)}
+.proj-group-name{font-size:14px;font-weight:800}
+.proj-group-meta{font-size:11px;color:var(--text2);margin-top:2px}
+.proj-group-total{font-size:16px;font-weight:800;text-align:right}
+.proj-group-body{border-top:1px solid var(--border)}
+.proj-pago-row{display:flex;align-items:center;gap:12px;padding:11px 18px;border-bottom:1px solid var(--border);transition:background .12s}
+.proj-pago-row:last-child{border-bottom:none}
+.proj-pago-row:hover{background:var(--surface2)}
+.proj-pago-etapa{font-size:12px;font-weight:700;width:70px;flex-shrink:0}
+.proj-pago-fecha{font-size:11px;color:var(--text2);width:90px;flex-shrink:0}
+.proj-pago-monto{font-size:13px;font-weight:800;flex:1}
+.proj-pago-emp{font-size:10px;color:var(--text2);flex:1}
+.proj-pago-toggle{padding:6px 14px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:none;font-family:Montserrat,sans-serif;transition:all .15s;white-space:nowrap;display:flex;align-items:center;gap:5px}
+.proj-pago-toggle.cobrado{background:var(--green-d);color:var(--green);border:1px solid rgba(45,202,114,.3)}
+.proj-pago-toggle.pendiente{background:var(--yellow-d);color:var(--yellow);border:1px solid rgba(232,184,74,.3)}
+.tip{background:var(--blue-dd);border:1px solid rgba(26,115,232,.18);border-radius:8px;padding:9px 13px;font-size:11px;color:var(--blue-l);margin-bottom:14px;font-weight:500}
+.div{height:1px;background:var(--border);margin:22px 0}
+.empty{text-align:center;padding:36px;color:var(--text2);font-size:12px}
+
+/* CHART ROW 3 */
+.chart3{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:16px;margin-bottom:18px}
+/* NETO HIGHLIGHT */
+.neto-box{background:linear-gradient(135deg,rgba(26,115,232,.15) 0%,rgba(26,115,232,.05) 100%);border:1px solid rgba(26,115,232,.3);border-radius:var(--r);padding:18px 20px}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-anm">ANM</div>
+    <div class="logo-sub">Content Studio · Finance</div>
+    <div id="sync-status" style="font-size:9px;margin-top:6px;font-weight:700;color:var(--text3);transition:color .3s">💾 Local</div>
+  </div>
+  <nav class="nav">
+    <div class="ns">Overview</div>
+    <div class="ni active" onclick="goTo('dashboard',this)"><span class="ni-icon">◈</span>Dashboard</div>
+    <div class="ni" onclick="goTo('proyeccion',this)"><span class="ni-icon">◉</span>Proyección</div>
+    <div class="ns">Ingresos</div>
+    <div class="ni" onclick="goTo('cobros',this)"><span class="ni-icon">✓</span>Cobros del Mes</div>
+    <div class="ni" onclick="goTo('clientes',this)"><span class="ni-icon">◇</span>Clientes Mensuales</div>
+    <div class="ni" onclick="goTo('proyectos',this)"><span class="ni-icon">◎</span>Proyectos Puntuales</div>
+    <div class="ns">Equipo & Gastos</div>
+    <div class="ni" onclick="goTo('equipo',this)"><span class="ni-icon">◑</span>Equipo</div>
+    <div class="ni" onclick="goTo('gastos',this)"><span class="ni-icon">◐</span>Otros Gastos</div>
+    <div class="ns">Sistema</div>
+    <div class="ni" onclick="goTo('config',this)"><span class="ni-icon">⚙</span>Configuración</div>
+  </nav>
+</aside>
+
+<main class="main">
+
+<!-- ═══════════════ DASHBOARD ═══════════════ -->
+<div id="page-dashboard" class="page active">
+  <div class="topbar">
+    <div class="ptitle">Dashboard</div>
+    <div class="mnav">
+      <button class="mb" onclick="changeMonth(-1)">‹</button>
+      <div class="mlabel" id="d-mlabel">—</div>
+      <button class="mb" onclick="changeMonth(1)">›</button>
+    </div>
+  </div>
+  <div class="content">
+
+    <!-- Recordatorio facturación -->
+    <div id="d-reminder" style="background:linear-gradient(90deg,rgba(232,184,74,.18),rgba(232,184,74,.06));border:1px solid rgba(232,184,74,.4);border-radius:10px;padding:11px 16px;margin-bottom:16px;display:none;align-items:center;gap:10px">
+      <span style="font-size:18px">🔔</span>
+      <div style="flex:1"><div style="font-weight:800;font-size:12px;color:var(--yellow)">Recordatorio: Facturas del mes</div><div style="font-size:11px;color:var(--text2);margin-top:2px">El 25 de cada mes hay que enviarle las facturas a los clientes. <span id="d-reminder-days" style="color:var(--yellow);font-weight:700"></span></div></div>
+      <button onclick="document.getElementById('d-reminder').style.display='none'" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px">✕</button>
+    </div>
+
+    <!-- KPIs fila 1 -->
+    <div class="crow c4">
+      <div class="card ct ct-g"><div class="clabel">Ingresos del Mes</div><div class="cval col-g" id="d-ingresos">$0</div><div class="csub" id="d-ingresos-sub">—</div></div>
+      <div class="card ct ct-r"><div class="clabel">Costos del Mes</div><div class="cval col-r" id="d-costos">$0</div><div class="csub" id="d-costos-sub">—</div></div>
+      <div class="neto-box ct ct-bl" style="border-radius:var(--r)"><div class="clabel">🎯 Lo que nos queda (Neto)</div><div class="cval col-b" id="d-neto">$0</div><div class="csub" id="d-neto-sub">—</div></div>
+      <div class="card ct ct-y"><div class="clabel">Pendiente de Cobrar</div><div class="cval col-y" id="d-pendiente">$0</div><div class="csub" id="d-pendiente-sub">—</div></div>
+    </div>
+
+    <!-- KPIs socios -->
+    <div class="crow c2" style="margin-bottom:20px">
+      <div class="card" style="display:flex;align-items:center;gap:18px;padding:14px 18px">
+        <div class="av" style="background:#1A73E8;color:#fff;width:40px;height:40px;font-size:14px">DIO</div>
+        <div style="flex:1">
+          <div class="clabel" style="margin-bottom:4px">Le toca a Dio este mes (40%)</div>
+          <div class="cval col-b" id="d-dio">$0</div>
+          <div id="d-dio-breakdown" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:5px"></div>
+        </div>
+        <div style="text-align:right"><div style="font-size:28px;font-weight:900;color:rgba(26,115,232,.25)">40%</div></div>
+      </div>
+      <div class="card" style="display:flex;align-items:center;gap:18px;padding:14px 18px">
+        <div class="av" style="background:#4d96ff;color:#fff;width:40px;height:40px;font-size:14px">SAN</div>
+        <div style="flex:1">
+          <div class="clabel" style="margin-bottom:4px">Le toca a Santi este mes (40%)</div>
+          <div class="cval col-b" id="d-santi">$0</div>
+          <div id="d-santi-breakdown" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:5px"></div>
+        </div>
+        <div style="text-align:right"><div style="font-size:28px;font-weight:900;color:rgba(77,150,255,.25)">40%</div></div>
+      </div>
+    </div>
+
+    <!-- Equipo pagos del mes — empleados primero, socios al final -->
+    <div class="tw">
+      <div class="th">
+        <div class="tt">Pagos del Mes — <span id="d-mes-eq" style="color:var(--text2);font-weight:600;font-size:11px"></span></div>
+        <div style="font-size:10px;color:var(--text2)">Empleados primero · Socios al final</div>
+      </div>
+      <table><thead><tr><th>Persona</th><th>Tipo</th><th>Cliente(s)</th><th>Monto</th><th>Día pago</th><th>Estado / Pago</th><th></th></tr></thead>
+      <tbody id="d-eq-tbody"></tbody></table>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════ COBROS DEL MES ═══════════════ -->
+<div id="page-cobros" class="page">
+  <div class="topbar">
+    <div class="ptitle">Cobros del Mes</div>
+    <div class="mnav">
+      <button class="mb" onclick="changeMonth(-1)">‹</button>
+      <div class="mlabel" id="c-mlabel">—</div>
+      <button class="mb" onclick="changeMonth(1)">›</button>
+    </div>
+  </div>
+  <div class="content">
+    <div class="tip">💡 Marcá cada cliente como cobrado cuando recibís el pago. Se guarda por mes independientemente.</div>
+    <div class="crow c3" style="margin-bottom:18px">
+      <div class="card ct ct-g"><div class="clabel">Cobrado</div><div class="cval col-g" id="c-cobrado">$0</div></div>
+      <div class="card ct ct-y"><div class="clabel">Pendiente</div><div class="cval col-y" id="c-pendiente">$0</div></div>
+      <div class="card ct ct-bl"><div class="clabel">Total esperado</div><div class="cval col-b" id="c-total">$0</div></div>
+    </div>
+    <div class="cgrid" id="cobros-grid"></div>
+  </div>
+</div>
+
+<!-- ═══════════════ CLIENTES MENSUALES ═══════════════ -->
+<div id="page-clientes" class="page">
+  <div class="topbar">
+    <div class="ptitle">Clientes Mensuales</div>
+    <button class="btn bp" onclick="openModal('m-cliente')">+ Nuevo Cliente</button>
+  </div>
+  <div class="content">
+
+    <!-- Tabs RRSS / Pauta -->
+    <div class="tabs">
+      <div class="tab active" onclick="setClienteTab('todos',this)">Todos</div>
+      <div class="tab" onclick="setClienteTab('rrss',this)">Redes Sociales</div>
+      <div class="tab" onclick="setClienteTab('pauta',this)">Pauta</div>
+      <div class="tab" onclick="setClienteTab('otros',this)">Otros</div>
+    </div>
+
+    <div class="tw">
+      <div class="th">
+        <div class="tt">Clientes con Contrato Mensual</div>
+        <div id="mrr-total" style="font-size:13px;font-weight:800;color:var(--green)"></div>
+      </div>
+      <table>
+        <thead><tr><th>Cliente</th><th>Tipo de Servicio</th><th>Servicios Acordados</th><th>Equipo asignado</th><th>Retainer/mes</th><th>Estado</th><th></th></tr></thead>
+        <tbody id="tbody-clientes"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PROYECTOS PUNTUALES ═══════════════ -->
+<div id="page-proyectos" class="page">
+  <div class="topbar">
+    <div class="ptitle">Proyectos Puntuales</div>
+    <button class="btn bp" onclick="openModal('m-proyecto')">+ Nuevo Proyecto / Pago</button>
+  </div>
+  <div class="content">
+    <div class="crow c3">
+      <div class="card ct ct-g"><div class="clabel">Cobrado (pagos marcados)</div><div class="cval col-g" id="ps-cobrado">$0</div></div>
+      <div class="card ct ct-y"><div class="clabel">Pendiente de cobrar</div><div class="cval col-y" id="ps-pendiente">$0</div></div>
+      <div class="card"><div class="clabel">Proyectos activos</div><div class="cval col-b" id="ps-count">0</div></div>
+    </div>
+    <div class="tip">Cada proyecto agrupa sus pagos. Marcá cada pago como cobrado en el mes que corresponde — se refleja en el dashboard de ese mes.</div>
+    <div id="proyectos-list"></div>
+  </div>
+</div>
+
+<!-- ═══════════════ EQUIPO ═══════════════ -->
+<div id="page-equipo" class="page">
+  <div class="topbar">
+    <div class="ptitle">Equipo</div>
+    <button class="btn bp" onclick="openModal('m-empleado')">+ Agregar</button>
+  </div>
+  <div class="content">
+    <div class="crow c3">
+      <div class="card ct ct-r"><div class="clabel">Nómina Mensual</div><div class="cval col-r" id="eq-nomina">$0</div><div class="csub">empleados activos</div></div>
+      <div class="card"><div class="clabel">Personas en equipo</div><div class="cval col-b" id="eq-count">0</div></div>
+      <div class="card ct ct-y"><div class="clabel">Nómina Anual</div><div class="cval col-y" id="eq-anual">$0</div></div>
+    </div>
+    <div class="tw">
+      <div class="th"><div class="tt">Equipo ANM Studio</div></div>
+      <table>
+        <thead><tr><th>Persona</th><th>Rol / Dedicación</th><th>Cliente(s) asignado(s)</th><th>Sueldo/mes</th><th>Día pago</th><th>Estado</th><th></th></tr></thead>
+        <tbody id="tbody-equipo"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ GASTOS ═══════════════ -->
+<div id="page-gastos" class="page">
+  <div class="topbar">
+    <div class="ptitle">Otros Gastos</div>
+    <button class="btn bp" onclick="openModal('m-gasto')">+ Nuevo Gasto</button>
+  </div>
+  <div class="content">
+    <div class="crow c3">
+      <div class="card ct ct-r"><div class="clabel">Gastos Fijos/mes</div><div class="cval col-r" id="g-fijo">$0</div></div>
+      <div class="card ct ct-y"><div class="clabel">Gastos Anuales</div><div class="cval col-y" id="g-anual">$0</div></div>
+      <div class="card"><div class="clabel">Total Anual</div><div class="cval col-r" id="g-total">$0</div></div>
+    </div>
+    <div class="tw">
+      <div class="th"><div class="tt">Gastos Registrados</div></div>
+      <table><thead><tr><th>Concepto</th><th>Categoría</th><th>Monto</th><th>Frecuencia</th><th></th></tr></thead>
+      <tbody id="tbody-gastos"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PROYECCION ═══════════════ -->
+<div id="page-proyeccion" class="page">
+  <div class="topbar"><div class="ptitle">Proyección</div></div>
+  <div class="content">
+
+    <!-- ── HISTORIA ANM ── -->
+    <div style="margin-bottom:22px">
+      <div style="font-size:9px;color:var(--text3);letter-spacing:2.5px;text-transform:uppercase;font-weight:700;margin-bottom:12px">ANM Content Studio · Historial desde el inicio (4 meses)</div>
+      <div class="crow c4" style="margin-bottom:14px">
+        <div class="card ct ct-g">
+          <div class="clabel">Facturado Total (histórico)</div>
+          <div class="cval col-g" id="pr-hist-total">$0</div>
+          <div class="csub">Suma de todos los proyectos</div>
+        </div>
+        <div class="card ct ct-r">
+          <div class="clabel">Pagado a Equipo (histórico)</div>
+          <div class="cval col-r" id="pr-hist-costos">$0</div>
+          <div class="csub">Colaboradoras + gastos</div>
+        </div>
+        <div class="card ct ct-bl">
+          <div class="clabel">Neto Acumulado (4 meses)</div>
+          <div class="cval col-b" id="pr-hist-neto">$0</div>
+          <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">
+            <div style="background:rgba(26,115,232,.1);border:1px solid rgba(26,115,232,.25);border-radius:6px;padding:3px 9px;font-size:10px;font-weight:700;color:var(--blue-l)">Dio <span id="pr-hist-dio">$0</span></div>
+            <div style="background:rgba(26,115,232,.1);border:1px solid rgba(26,115,232,.25);border-radius:6px;padding:3px 9px;font-size:10px;font-weight:700;color:var(--blue-l)">Santi <span id="pr-hist-santi">$0</span></div>
+          </div>
+        </div>
+        <div class="card" style="background:linear-gradient(135deg,rgba(45,202,180,.12),rgba(45,202,180,.04));border:1px solid rgba(45,202,180,.3);border-top:2px solid var(--teal)">
+          <div class="clabel" style="color:var(--teal)">💰 Fondo ANM (ahorro agencia)</div>
+          <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:4px">
+            <div style="font-size:26px;font-weight:900;color:var(--teal)">U$S</div>
+            <input id="pr-fondo-edit" type="number" step="0.01" onchange="saveFondo()" style="background:transparent;border:none;border-bottom:1.5px solid rgba(45,202,180,.4);color:var(--teal);font-family:Montserrat,sans-serif;font-size:26px;font-weight:900;outline:none;width:110px;padding:0 2px">
+          </div>
+          <div style="font-size:11px;color:var(--teal);font-weight:700" id="pr-fondo-ars-eq">≈ $0 ARS</div>
+          <div style="font-size:10px;color:var(--text2);margin-top:4px">Editá el monto real del fondo · cotización: <input id="pr-cotiz" type="number" value="1500" onchange="saveCotiz()" style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:2px 5px;color:var(--text);font-family:Montserrat,sans-serif;font-size:10px;font-weight:700;outline:none;width:55px"> ARS/USD</div>
+        </div>
+      </div>
+
+      <!-- Flujo mensual histórico -->
+      <div class="ca" style="margin-bottom:0">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div class="catitle" style="margin-bottom:0">Flujo mensual de ANM — Ingresos, Costos y Neto</div>
+          <div style="font-size:10px;color:var(--text2)">Basado en proyectos registrados</div>
+        </div>
+        <canvas id="ch-flujo" height="130"></canvas>
+      </div>
+    </div>
+
+    <div style="height:1px;background:var(--border);margin-bottom:20px"></div>
+    <div class="crow c4">
+      <div class="card ct ct-g"><div class="clabel">Ingresos Recurrentes</div><div class="cval col-g" id="pr-mrr">$0</div><div class="csub">Clientes con contrato mensual</div></div>
+      <div class="card ct ct-r"><div class="clabel">Costos Fijos/mes</div><div class="cval col-r" id="pr-costos">$0</div><div class="csub">Equipo + gastos</div></div>
+      <div class="card ct ct-bl"><div class="clabel">Neto Mensual (est.)</div><div class="cval col-b" id="pr-neto">$0</div><div class="csub" id="pr-neto-sub">—</div></div>
+      <div class="card ct ct-y"><div class="clabel">Proyección 12 meses (neta)</div><div class="cval col-y" id="pr-anual">$0</div><div class="csub" id="pr-anual-sub">—</div></div>
+    </div>
+    <!-- Ganancias socios proyección -->
+    <div class="crow c2" style="margin-bottom:18px">
+      <div class="card" style="display:flex;justify-content:space-between;align-items:center;padding:14px 20px">
+        <div><div class="clabel">Ganancia anual Dio (40%)</div><div class="cval col-b" id="pr-dio-anual">$0</div></div>
+        <div><div class="clabel">Ganancia anual Santi (40%)</div><div class="cval col-b" id="pr-santi-anual">$0</div></div>
+        <div><div class="clabel">Fondo Agencia (20%)</div><div class="cval" style="color:var(--text2)" id="pr-agencia-anual">$0</div></div>
+      </div>
+      <div class="card ct ct-y"><div class="clabel">Punto de Equilibrio</div><div class="cval col-y" id="pr-break">$0</div><div class="csub">Mínimo mensual para cubrir costos</div></div>
+    </div>
+    <div class="twocol">
+      <div class="pc"><div class="pct">Proyección 6 meses</div><div id="pr-bars"></div></div>
+      <div class="pc"><div class="pct">Resumen Anual</div><div id="pr-breakdown"></div></div>
+    </div>
+    <!-- Gráficos movidos desde dashboard -->
+    <div class="chart3" style="margin-bottom:18px">
+      <div class="ca" style="margin-bottom:0"><div class="catitle">Ingresos por Cliente (mes actual)</div><canvas id="ch-clientes" height="220"></canvas></div>
+      <div class="ca" style="margin-bottom:0"><div class="catitle">Recurrentes vs Puntuales</div><canvas id="ch-tipos" height="220"></canvas></div>
+      <div class="ca" style="margin-bottom:0"><div class="catitle">Costos del Mes por Persona</div><canvas id="ch-costos" height="220"></canvas></div>
+    </div>
+    <div class="ca"><div class="catitle">Proyección 12 meses — Ingresos vs Neto</div><canvas id="ch-proyeccion" height="110"></canvas></div>
+    <div class="ca"><div class="catitle">Evolución Histórica de Ingresos por Mes</div><canvas id="ch-historico" height="110"></canvas></div>
+  </div>
+</div>
+
+<!-- ═══════════════ CONFIGURACIÓN ═══════════════ -->
+<div id="page-config" class="page">
+  <div class="topbar"><div class="ptitle">Configuración</div></div>
+  <div class="content">
+    <div class="cfsect">
+      <div class="cftitle">Presupuesto y Servicios por Cliente</div>
+      <div class="tip">💰 Editá el retainer acordado y los servicios contratados por cada cliente. Esto se usa en Cobros del Mes y Proyección.</div>
+      <div class="cfgrid" id="cfg-clientes"></div>
+    </div>
+    <div class="div"></div>
+    <div class="cfsect">
+      <div class="cftitle">Distribución de Ganancias</div>
+      <div class="cfcard" style="max-width:380px">
+        <div style="display:flex;flex-direction:column">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)">
+            <div><div style="font-weight:800;font-size:14px">Dio</div><div style="font-size:10px;color:var(--text2)">Socio fundador</div></div>
+            <div style="font-size:24px;font-weight:900;color:var(--blue)">40%</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)">
+            <div><div style="font-weight:800;font-size:14px">Santi</div><div style="font-size:10px;color:var(--text2)">Socio fundador</div></div>
+            <div style="font-size:24px;font-weight:900;color:var(--blue)">40%</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);background:rgba(26,115,232,.05);border-radius:6px;padding:10px 12px;margin:4px 0">
+            <div><div style="font-weight:800;font-size:13px;color:var(--blue-l)">Socios (total)</div><div style="font-size:10px;color:var(--text2)">Dio + Santi combinado</div></div>
+            <div style="font-size:24px;font-weight:900;color:var(--blue)">80%</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0">
+            <div><div style="font-weight:800;font-size:14px">Agencia</div><div style="font-size:10px;color:var(--text2)">Reinversión / operaciones</div></div>
+            <div style="font-size:24px;font-weight:900;color:var(--text3)">20%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="div"></div>
+    <div class="cfsect">
+      <div class="cftitle">Zona de Peligro</div>
+      <button class="btn bd" onclick="resetData()">⚠ Resetear todos los datos</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Pago Extra -->
+<div class="mo" id="m-pago-extra">
+  <div class="modal" style="width:380px">
+    <div class="mtitle">+ Pago Extra</div>
+    <div style="font-size:11px;color:var(--text2);margin-bottom:14px">Se agrega al proyecto existente como un pago adicional.</div>
+    <input id="pe-nombre" type="hidden">
+    <input id="pe-cliente" type="hidden">
+    <input id="pe-moneda" type="hidden">
+    <div class="fr"><label>Etiqueta del pago</label><input id="pe-etapa" placeholder="Ej: Pago extra, Adicional, Revisión"></div>
+    <div class="fg">
+      <div class="fr"><label>Monto</label><input id="pe-monto" type="number" placeholder="0"></div>
+      <div class="fr"><label>Fecha de cobro</label><input id="pe-fecha" type="date"></div>
+    </div>
+    <div class="mact">
+      <button class="btn bg" onclick="closeModal('m-pago-extra')">Cancelar</button>
+      <button class="btn bp" onclick="addPagoExtra()">Agregar</button>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<!-- ═══════════════ MODALS ═══════════════ -->
+
+<!-- Modal Cliente -->
+<div class="mo" id="m-cliente">
+  <div class="modal">
+    <div class="mtitle">Nuevo Cliente Mensual</div>
+    <div class="fg">
+      <div class="fr"><label>Nombre del Cliente</label><input id="mc-nombre" placeholder="Ej: Mipileta"></div>
+      <div class="fr"><label>Tipo de Servicio</label>
+        <select id="mc-tipo">
+          <option value="rrss">Redes Sociales (RRSS)</option>
+          <option value="pauta">Pauta / Ads</option>
+          <option value="rrss+pauta">RRSS + Pauta</option>
+          <option value="web">Web / Desarrollo</option>
+          <option value="branding">Branding</option>
+          <option value="otros">Otros</option>
+        </select>
+      </div>
+    </div>
+    <div class="fr"><label>Servicios Acordados (descripción)</label><textarea id="mc-servicios" rows="2" placeholder="Ej: 3 posts semanales, stories diarias, reels x2/semana"></textarea></div>
+    <div class="fg">
+      <div class="fr"><label>Retainer Mensual</label><input id="mc-retainer" type="number" placeholder="0"></div>
+      <div class="fr"><label>Moneda</label><select id="mc-moneda"><option>ARS</option><option>USD</option><option>EUR</option></select></div>
+    </div>
+    <div class="fr"><label>Contacto</label><input id="mc-contacto" placeholder="Nombre contacto"></div>
+    <div class="fr"><label>Estado</label><select id="mc-estado"><option value="activo">Activo</option><option value="pausado">Pausado</option><option value="potencial">Potencial</option></select></div>
+    <div class="mact">
+      <button class="btn bg" onclick="closeModal('m-cliente')">Cancelar</button>
+      <button class="btn bp" onclick="addCliente()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Proyecto -->
+<div class="mo" id="m-proyecto">
+  <div class="modal">
+    <div class="mtitle">Nuevo Proyecto / Pago</div>
+    <div class="fg">
+      <div class="fr"><label>Nombre del Proyecto</label><input id="mp-nombre" placeholder="Ej: Página web"></div>
+      <div class="fr"><label>Cliente</label><input id="mp-cliente" placeholder="Nombre del cliente"></div>
+    </div>
+    <div class="fr"><label>Estructura de pagos</label>
+      <select id="mp-estructura" onchange="toggleEstructura()">
+        <option value="unico">Pago único</option>
+        <option value="5050" selected>50% inicio + 50% entrega</option>
+        <option value="custom">Pago personalizado (agregar a proyecto existente)</option>
+      </select>
+    </div>
+    <!-- Pago único / personalizado -->
+    <div id="mp-single-block">
+      <div class="fg">
+        <div class="fr"><label>Etapa</label><input id="mp-etapa" placeholder="Ej: Pago 1, Pago único"></div>
+        <div class="fr"><label>Monto</label><input id="mp-monto" type="number" placeholder="0"></div>
+      </div>
+      <div class="fg">
+        <div class="fr"><label>Fecha</label><input id="mp-fecha" type="date"></div>
+        <div class="fr"><label>Estado</label><select id="mp-estado"><option value="pendiente">Pendiente</option><option value="cobrado">Cobrado</option></select></div>
+      </div>
+    </div>
+    <!-- 50/50 -->
+    <div id="mp-5050-block">
+      <div class="fr" style="background:var(--blue-dd);border:1px solid rgba(26,115,232,.18);border-radius:8px;padding:10px 12px;margin-bottom:10px">
+        <div style="font-size:11px;color:var(--blue-l);font-weight:600">Se crean 2 pagos: 50% al arrancar + 50% al entregar</div>
+      </div>
+      <div class="fg">
+        <div class="fr"><label>Monto Total del Proyecto</label><input id="mp-total" type="number" placeholder="0" oninput="calcHalf()"></div>
+        <div class="fr"><label>Moneda</label><select id="mp-moneda2"><option>ARS</option><option>USD</option></select></div>
+      </div>
+      <div class="fg">
+        <div class="fr"><label>Fecha Pago 1 (inicio)</label><input id="mp-fecha1" type="date"></div>
+        <div class="fr"><label>Estado Pago 1</label><select id="mp-estado1"><option value="cobrado">Cobrado</option><option value="pendiente">Pendiente</option></select></div>
+      </div>
+      <div class="fg">
+        <div class="fr"><label>Fecha Pago 2 (entrega)</label><input id="mp-fecha2" type="date"></div>
+        <div class="fr"><label>Estado Pago 2</label><select id="mp-estado2"><option value="pendiente">Pendiente</option><option value="cobrado">Cobrado</option></select></div>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:4px">
+        <div style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;text-align:center">
+          <div style="font-size:10px;color:var(--text2)">Pago 1</div>
+          <div style="font-size:16px;font-weight:800;color:var(--green)" id="mp-half1-preview">$0</div>
+        </div>
+        <div style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;text-align:center">
+          <div style="font-size:10px;color:var(--text2)">Pago 2</div>
+          <div style="font-size:16px;font-weight:800;color:var(--yellow)" id="mp-half2-preview">$0</div>
+        </div>
+      </div>
+    </div>
+    <div class="fg" style="margin-top:10px">
+      <div class="fr"><label>Colaborador</label><input id="mp-emp" placeholder="Ej: Luli Pagani"></div>
+      <div class="fr"><label>Costo colaborador</label><input id="mp-empc" type="number" placeholder="0"></div>
+    </div>
+    <div class="fr"><label>Notas</label><textarea id="mp-desc" rows="2"></textarea></div>
+    <div class="mact">
+      <button class="btn bg" onclick="closeModal('m-proyecto')">Cancelar</button>
+      <button class="btn bp" onclick="addProyecto()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Empleado -->
+<div class="mo" id="m-empleado">
+  <div class="modal">
+    <div class="mtitle">Agregar al Equipo</div>
+    <div class="fg">
+      <div class="fr"><label>Nombre</label><input id="me-nombre" placeholder="Nombre completo"></div>
+      <div class="fr"><label>Rol</label><input id="me-rol" placeholder="Ej: Community Manager"></div>
+    </div>
+    <div class="fg">
+      <div class="fr"><label>Sueldo Mensual</label><input id="me-sueldo" type="number" placeholder="0"></div>
+      <div class="fr"><label>Moneda</label><select id="me-moneda"><option>ARS</option><option>USD</option></select></div>
+    </div>
+    <div class="fg">
+      <div class="fr"><label>Día de Pago</label><input id="me-dia" type="number" min="1" max="31" placeholder="5"></div>
+      <div class="fr"><label>Dedicación</label><select id="me-dedicacion"><option value="full">Full time</option><option value="part">Part time</option></select></div>
+    </div>
+    <div class="fg">
+      <div class="fr"><label>Estado</label><select id="me-estado"><option value="activo">Activo</option><option value="inactivo">Inactivo</option></select></div>
+      <div class="fr"><label>Email</label><input id="me-email" type="email" placeholder="email@anmstudio.com"></div>
+    </div>
+    <div class="mact">
+      <button class="btn bg" onclick="closeModal('m-empleado')">Cancelar</button>
+      <button class="btn bp" onclick="addEmpleado()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Gasto -->
+<div class="mo" id="m-gasto">
+  <div class="modal">
+    <div class="mtitle">Nuevo Gasto</div>
+    <div class="fr"><label>Concepto</label><input id="mg-concepto" placeholder="Ej: Adobe Creative Cloud"></div>
+    <div class="fg">
+      <div class="fr"><label>Categoría</label>
+        <select id="mg-cat"><option>Software / Tools</option><option>Oficina / Coworking</option><option>Marketing</option><option>Capacitación</option><option>Legales / Contabilidad</option><option>Servicios</option><option>Otro</option></select>
+      </div>
+      <div class="fr"><label>Frecuencia</label><select id="mg-freq"><option value="mensual">Mensual</option><option value="anual">Anual</option><option value="unico">Único</option></select></div>
+    </div>
+    <div class="fg">
+      <div class="fr"><label>Monto</label><input id="mg-monto" type="number" placeholder="0"></div>
+      <div class="fr"><label>Moneda</label><select id="mg-moneda"><option>ARS</option><option>USD</option></select></div>
+    </div>
+    <div class="mact">
+      <button class="btn bg" onclick="closeModal('m-gasto')">Cancelar</button>
+      <button class="btn bp" onclick="addGasto()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let S = {
+  clientes:[],proyectos:[],empleados:[],gastos:[],
+  cobros:[],pagosEq:[],skips:[],facturas:[],
+  cotizacion:1500, fondoUSD:1047.75,
+  mes: new Date().getMonth(), anio: new Date().getFullYear(),
+};
+const MONTHS=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const COLS=['#1A73E8','#2dca72','#e8b84a','#e8484a','#9b6fe8','#2dcab4','#4d96ff','#e87a4a'];
+const TIPO_LABEL={rrss:'Redes Sociales',pauta:'Pauta / Ads','rrss+pauta':'RRSS + Pauta',web:'Web / Desarrollo',branding:'Branding',otros:'Otros'};
+const TIPO_BADGE={rrss:'b-bl',pauta:'b-p','rrss+pauta':'b-t',web:'b-g',branding:'b-y',otros:'b-gr'};
+
+let clienteTab='todos';
+let charts={};
+
+// ─── SUPABASE CONFIG ─────────────────────────────────────────────────────────
+const SB_URL = 'https://sdlhjhtwlzeifawbrzxm.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbGhqaHR3bHplaWZhd2JyenhtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI4NjU5NTMsImV4cCI6MjA1ODQ0MTk1M30.tWWIeVkl5D-vbmKpNQZSEHj_2N6c5FJd7vmNGx2XNOE';
+const SB_HEADERS = { 'Content-Type': 'application/json', 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY };
+
+let saveTimeout = null;
+let syncStatus = 'local'; // 'local' | 'syncing' | 'synced' | 'error'
+
+function setSyncStatus(s){
+  syncStatus=s;
+  const el=document.getElementById('sync-status');
+  if(!el)return;
+  const map={local:'💾 Local',syncing:'⏳ Guardando...',synced:'✅ Sincronizado',error:'⚠️ Sin conexión'};
+  const col={local:'var(--text3)',syncing:'var(--yellow)',synced:'var(--green)',error:'var(--red)'};
+  el.textContent=map[s]||s;
+  el.style.color=col[s]||'var(--text2)';
+}
+
+async function saveToSupabase(){
+  setSyncStatus('syncing');
+  try{
+    const res=await fetch(SB_URL+'/rest/v1/anm_state?id=eq.main',{
+      method:'PATCH',
+      headers:{...SB_HEADERS,'Prefer':'return=minimal'},
+      body:JSON.stringify({data:S, updated_at:new Date().toISOString()})
+    });
+    if(res.ok){ setSyncStatus('synced'); }
+    else { throw new Error('patch failed'); }
+  } catch(e){
+    // Intentar INSERT si no existe
+    try{
+      const res2=await fetch(SB_URL+'/rest/v1/anm_state',{
+        method:'POST',
+        headers:{...SB_HEADERS,'Prefer':'return=minimal'},
+        body:JSON.stringify({id:'main',data:S, updated_at:new Date().toISOString()})
+      });
+      if(res2.ok){ setSyncStatus('synced'); }
+      else { setSyncStatus('error'); }
+    } catch(e2){ setSyncStatus('error'); }
+  }
+}
+
+async function loadFromSupabase(){
+  setSyncStatus('syncing');
+  try{
+    const res=await fetch(SB_URL+'/rest/v1/anm_state?id=eq.main&select=data',{
+      headers:SB_HEADERS
+    });
+    if(res.ok){
+      const rows=await res.json();
+      if(rows.length&&rows[0].data&&Object.keys(rows[0].data).length>0){
+        S={...S,...rows[0].data};
+        setSyncStatus('synced');
+        return true;
+      }
+    }
+    setSyncStatus('local');
+    return false;
+  } catch(e){ setSyncStatus('error'); return false; }
+}
+
+function save(){
+  // Guardar localmente primero (inmediato)
+  try{ localStorage.setItem('anm_v6', JSON.stringify(S)); }catch(e){}
+  // Debounce sync a Supabase (espera 800ms para no spamear)
+  clearTimeout(saveTimeout);
+  saveTimeout=setTimeout(()=>saveToSupabase(), 800);
+}
+
+function load(){
+  try{ const d=localStorage.getItem('anm_v6'); if(d) S={...S,...JSON.parse(d)}; }catch(e){}
+}
+function fmt(n,cur){if(!n)n=0;const s=cur==='USD'?'U$S ':cur==='EUR'?'€':'$';return s+Number(n).toLocaleString('es-AR',{maximumFractionDigits:0});}
+function ini(n){return(n||'?').split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();}
+function getQ(id){return S.clientes.find(c=>c.id===id);}
+function getE(id){return S.empleados.find(e=>e.id===id);}
+function retainer(c){return c.presupuesto??c.retainer??0;}
+
+// ─── NAV ─────────────────────────────────────────────────────────────────────
+function goTo(page,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  if(el)el.classList.add('active');
+  renderPage(page);
+}
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.mo').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+
+function changeMonth(d){
+  S.mes+=d;
+  if(S.mes>11){S.mes=0;S.anio++;}
+  if(S.mes<0){S.mes=11;S.anio--;}
+  save();render();
+}
+function setClienteTab(t,el){
+  clienteTab=t;
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  el.classList.add('active');
+  renderClientes();
+}
+
+// ─── COBROS ──────────────────────────────────────────────────────────────────
+function cKey(id){return`c-${id}-${S.mes}-${S.anio}`;}
+function isPagadoC(id){return S.cobros.some(x=>x.key===cKey(id));}
+function toggleCobro(id){
+  const k=cKey(id),i=S.cobros.findIndex(x=>x.key===k);
+  if(i>=0)S.cobros.splice(i,1);else S.cobros.push({key:k});
+  save();renderCobros();renderDash();
+}
+function fKey(id){return`f-${id}-${S.mes}-${S.anio}`;}
+function isFacturado(id){return(S.facturas||[]).some(x=>x.key===fKey(id));}
+function toggleFactura(id){
+  if(!S.facturas)S.facturas=[];
+  const k=fKey(id),i=S.facturas.findIndex(x=>x.key===k);
+  if(i>=0)S.facturas.splice(i,1);else S.facturas.push({key:k});
+  save();renderCobros();
+}
+function eKey(id){return`e-${id}-${S.mes}-${S.anio}`;}
+function isPagadoE(id){return S.pagosEq.some(x=>x.key===eKey(id));}
+function togglePagoEq(id){
+  const k=eKey(id),i=S.pagosEq.findIndex(x=>x.key===k);
+  if(i>=0)S.pagosEq.splice(i,1);else S.pagosEq.push({key:k});
+  save();renderDashEquipo();
+}
+
+// ─── CALCS ───────────────────────────────────────────────────────────────────
+function getMRR(){return S.clientes.filter(c=>c.estado==='activo').reduce((s,c)=>s+retainer(c),0);}
+function getNomina(){return S.empleados.filter(e=>e.estado==='activo').reduce((s,e)=>s+(e.sueldo||0),0);}
+function getGastosFijos(){return S.gastos.reduce((s,g)=>{if(g.frecuencia==='mensual')return s+g.monto;if(g.frecuencia==='anual')return s+g.monto/12;return s;},0);}
+// One-shots: solo páginas web, branding y presentaciones
+const ONE_SHOT_TIPOS=['Página web','Branding','Presentación','Web','Landing','Ecommerce'];
+function isOneShot(p){return ONE_SHOT_TIPOS.some(t=>p.nombre?.toLowerCase().includes(t.toLowerCase()));}
+
+function getOneShotsMes(){
+  return S.proyectos.filter(p=>{
+    if(!p.fecha||!isOneShot(p)||p.estado!=='cobrado')return false;
+    const d=new Date(p.fecha+'T12:00');
+    return d.getMonth()===S.mes&&d.getFullYear()===S.anio;
+  }).reduce((s,p)=>s+p.monto,0);
+}
+function getCostoEmpleados(){
+  // Total pagado a empleados (sueldo fijo independiente si activo o no — histórico)
+  // Para este mes usamos activos
+  return getNomina();
+}
+// Lo que nos queda neto = ingresos - todo (empleados + gastos fijos)
+function getNetoMes(){
+  const ing=getMRR()+getOneShotsMes();
+  return ing-getNomina()-getGastosFijos();
+}
+
+// ─── ADDS / DELETES ──────────────────────────────────────────────────────────
+function addCliente(){
+  const n=document.getElementById('mc-nombre').value.trim();if(!n)return alert('Nombre requerido');
+  S.clientes.push({id:Date.now(),nombre:n,tipo:document.getElementById('mc-tipo').value,
+    servicios:document.getElementById('mc-servicios').value.trim(),
+    retainer:parseFloat(document.getElementById('mc-retainer').value)||0,
+    moneda:document.getElementById('mc-moneda').value,
+    contacto:document.getElementById('mc-contacto').value.trim(),
+    estado:document.getElementById('mc-estado').value,
+    empleadoIds:[],presupuesto:null});
+  ['mc-nombre','mc-servicios','mc-retainer','mc-contacto'].forEach(x=>document.getElementById(x).value='');
+  save();closeModal('m-cliente');render();
+}
+function toggleEstructura(){
+  const v=document.getElementById('mp-estructura').value;
+  document.getElementById('mp-single-block').style.display=v==='5050'?'none':'block';
+  document.getElementById('mp-5050-block').style.display=v==='5050'?'block':'none';
+}
+function calcHalf(){
+  const total=parseFloat(document.getElementById('mp-total').value)||0;
+  const half=Math.round(total/2);
+  const el1=document.getElementById('mp-half1-preview');
+  const el2=document.getElementById('mp-half2-preview');
+  if(el1)el1.textContent='$'+half.toLocaleString('es-AR');
+  if(el2)el2.textContent='$'+(total-half).toLocaleString('es-AR');
+}
+function addProyecto(){
+  const nombre=document.getElementById('mp-nombre').value.trim();
+  const cliente=document.getElementById('mp-cliente').value.trim();
+  if(!nombre||!cliente)return alert('Nombre y cliente requeridos');
+  const estructura=document.getElementById('mp-estructura').value;
+  const emp=document.getElementById('mp-emp').value.trim();
+  const empc=parseFloat(document.getElementById('mp-empc').value)||0;
+  const desc=document.getElementById('mp-desc').value.trim();
+
+  if(estructura==='5050'){
+    const total=parseFloat(document.getElementById('mp-total').value)||0;
+    if(!total)return alert('Ingresá el monto total');
+    const moneda=document.getElementById('mp-moneda2').value;
+    const half=Math.round(total/2);
+    const resto=total-half;
+    S.proyectos.push({id:Date.now(),   nombre,cliente,monto:half, moneda,etapa:'Pago 1 (50%)',fecha:document.getElementById('mp-fecha1').value,empNombre:emp,empCosto:Math.round(empc/2),estado:document.getElementById('mp-estado1').value,desc:'Inicio'});
+    S.proyectos.push({id:Date.now()+1, nombre,cliente,monto:resto,moneda,etapa:'Pago 2 (50%)',fecha:document.getElementById('mp-fecha2').value,empNombre:emp,empCosto:Math.round(empc/2),estado:document.getElementById('mp-estado2').value,desc:'Entrega'+( desc?(' — '+desc):'')});
+  } else {
+    const moneda=document.getElementById('mp-moneda2')?.value||'ARS';
+    S.proyectos.push({id:Date.now(),nombre,cliente,
+      monto:parseFloat(document.getElementById('mp-monto').value)||0,
+      moneda,
+      etapa:document.getElementById('mp-etapa').value.trim(),
+      fecha:document.getElementById('mp-fecha').value,
+      empNombre:emp,empCosto:empc,
+      estado:document.getElementById('mp-estado').value,
+      desc});
+  }
+  ['mp-nombre','mp-cliente','mp-total','mp-monto','mp-etapa','mp-fecha','mp-fecha1','mp-fecha2','mp-emp','mp-empc','mp-desc'].forEach(x=>{const el=document.getElementById(x);if(el)el.value='';});
+  save();closeModal('m-proyecto');renderProyectos();renderDash();
+}
+function addEmpleado(){
+  const n=document.getElementById('me-nombre').value.trim();if(!n)return alert('Nombre requerido');
+  S.empleados.push({id:Date.now(),nombre:n,
+    rol:document.getElementById('me-rol').value.trim(),
+    sueldo:parseFloat(document.getElementById('me-sueldo').value)||0,
+    moneda:document.getElementById('me-moneda').value,
+    dia:parseInt(document.getElementById('me-dia').value)||5,
+    dedicacion:document.getElementById('me-dedicacion').value,
+    estado:document.getElementById('me-estado').value,
+    email:document.getElementById('me-email').value.trim(),
+    color:COLS[S.empleados.length%COLS.length],
+    clienteIds:[]});
+  ['me-nombre','me-rol','me-sueldo','me-dia','me-email'].forEach(x=>document.getElementById(x).value='');
+  save();closeModal('m-empleado');render();
+}
+function addGasto(){
+  const n=document.getElementById('mg-concepto').value.trim();if(!n)return alert('Concepto requerido');
+  S.gastos.push({id:Date.now(),concepto:n,
+    categoria:document.getElementById('mg-cat').value,
+    frecuencia:document.getElementById('mg-freq').value,
+    monto:parseFloat(document.getElementById('mg-monto').value)||0,
+    moneda:document.getElementById('mg-moneda').value});
+  ['mg-concepto','mg-monto'].forEach(x=>document.getElementById(x).value='');
+  save();closeModal('m-gasto');render();
+}
+function delCliente(id){if(!confirm('¿Eliminar?'))return;S.clientes=S.clientes.filter(c=>c.id!==id);save();render();}
+function delProyecto(id){if(!confirm('¿Eliminar?'))return;S.proyectos=S.proyectos.filter(p=>p.id!==id);save();render();}
+function delEmpleado(id){if(!confirm('¿Eliminar?'))return;S.empleados=S.empleados.filter(e=>e.id!==id);save();render();}
+function delGasto(id){if(!confirm('¿Eliminar?'))return;S.gastos=S.gastos.filter(g=>g.id!==id);save();render();}
+
+function toggleSkip(empId){
+  if(!S.skips)S.skips=[];
+  const k=`skip-${empId}-${S.mes}-${S.anio}`;
+  const i=S.skips.indexOf(k);
+  if(i>=0)S.skips.splice(i,1);else S.skips.push(k);
+  save();renderDash();
+}
+
+// ─── ASSIGN EMPLOYEE TO CLIENT (desde config) ───────────────────────────────
+function toggleEmpCliente(empId,clienteId){
+  const e=S.empleados.find(x=>x.id===empId);
+  const c=S.clientes.find(x=>x.id===clienteId);
+  if(!e||!c)return;
+  if(!e.clienteIds)e.clienteIds=[];
+  if(!c.empleadoIds)c.empleadoIds=[];
+  const iE=e.clienteIds.indexOf(clienteId);
+  const iC=c.empleadoIds.indexOf(empId);
+  if(iE>=0){e.clienteIds.splice(iE,1);}else{e.clienteIds.push(clienteId);}
+  if(iC>=0){c.empleadoIds.splice(iC,1);}else{c.empleadoIds.push(empId);}
+  save();renderConfig();renderClientes();renderEquipo();
+}
+
+// ─── RENDER DASHBOARD ────────────────────────────────────────────────────────
+function renderDash(){
+  const ml=MONTHS[S.mes]+' '+S.anio;
+  ['d-mlabel','c-mlabel'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=ml;});
+
+  // Billing reminder (dia 25 ± 7 days)
+  const today=new Date();
+  const rem=document.getElementById('d-reminder');
+  if(rem){
+    const day25=new Date(today.getFullYear(),today.getMonth(),25);
+    const diffDays=Math.round((day25-today)/(1000*60*60*24));
+    const remDays=document.getElementById('d-reminder-days');
+    if(diffDays>=0&&diffDays<=7){
+      rem.style.display='flex';
+      if(remDays) remDays.textContent=diffDays===0?'¡Hoy es día 25! Enviá las facturas.':diffDays===1?'¡Mañana es el día 25!':'Faltan '+diffDays+' días.';
+    } else if(diffDays<0&&diffDays>=-3){
+      rem.style.display='flex';
+      if(remDays) remDays.textContent='Pasó hace '+Math.abs(diffDays)+' día'+(Math.abs(diffDays)>1?'s':'')+'. ¿Ya las enviaste?';
+    } else {
+      rem.style.display='none';
+    }
+  }
+
+  const mrr=getMRR(),os=getOneShotsMes(),ing=mrr+os;
+  const nom=getNomina(),gf=getGastosFijos(),costos=nom+gf;
+  const neto=ing-costos;
+  const dio=Math.max(0,Math.round(neto*0.4));
+  const santi=Math.max(0,Math.round(neto*0.4));
+  const pendiente=S.clientes.filter(c=>c.estado==='activo'&&!isPagadoC(c.id)).reduce((s,c)=>s+retainer(c),0);
+  const pendN=S.clientes.filter(c=>c.estado==='activo'&&!isPagadoC(c.id)).length;
+  const margen=ing>0?Math.round((neto/ing)*100):0;
+
+  const setV=(id,v,col)=>{const el=document.getElementById(id);if(!el)return;el.textContent=v;if(col)el.style.color=col;};
+  setV('d-ingresos',fmt(ing));setV('d-ingresos-sub',fmt(mrr)+(os?' + Puntual '+fmt(os):''));
+  setV('d-costos',fmt(costos));setV('d-costos-sub','Equipo '+fmt(nom)+' + Fijos '+fmt(gf));
+  setV('d-neto',fmt(neto),neto>=0?'var(--blue)':'var(--red)');
+  setV('d-neto-sub','Margen '+margen+'% · Socios 80% → '+fmt(Math.round(neto*0.8))+' · Agencia 20% → '+fmt(Math.round(neto*0.2)));
+  setV('d-pendiente',fmt(pendiente));setV('d-pendiente-sub',pendN+' cliente'+(pendN!==1?'s':'')+' sin cobrar');
+  setV('d-dio',fmt(dio));setV('d-santi',fmt(santi));
+
+  // Client breakdown chips — green if paid, red if not yet
+  const activos=S.clientes.filter(c=>c.estado==='activo');
+  const chipHtml=activos.map(c=>{
+    const p=isPagadoC(c.id);
+    return`<div style="
+      background:${p?'rgba(45,202,114,.1)':'rgba(232,72,74,.1)'};
+      border:1px solid ${p?'rgba(45,202,114,.3)':'rgba(232,72,74,.25)'};
+      border-radius:8px;padding:4px 11px;font-size:11px;font-weight:700;white-space:nowrap
+    ">
+      <span style="color:${p?'var(--green)':'var(--red)'}">${c.nombre}</span>
+      <span style="color:${p?'rgba(45,202,114,.5)':'rgba(232,72,74,.5)'};margin-left:4px">${fmt(retainer(c))}</span>
+    </div>`;
+  }).join('');
+  ['d-dio-breakdown','d-santi-breakdown'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.innerHTML=chipHtml;
+  });
+
+  renderDashEquipo(dio,santi);
+}
+
+function renderDashEquipo(dioAmt=0,santiAmt=0){
+  const el=document.getElementById('d-mes-eq');if(el)el.textContent=MONTHS[S.mes]+' '+S.anio;
+  const tb=document.getElementById('d-eq-tbody');if(!tb)return;
+  const last=new Date(S.anio,S.mes+1,0).getDate();
+  if(!S.skips)S.skips=[];
+
+  const empleados=S.empleados.filter(e=>!['Dio','Santi'].includes(e.nombre));
+  const socios=S.empleados.filter(e=>['Dio','Santi'].includes(e.nombre));
+
+  const rowEmp=(e,esSocio,montoSocio)=>{
+    const dia=Math.min(e.dia||5,last);
+    const p=isPagadoE(e.id);
+    const activo=e.estado==='activo';
+    const skipKey=`skip-${e.id}-${S.mes}-${S.anio}`;
+    const skipped=S.skips.includes(skipKey);
+    const cNames=(e.clienteIds||[]).map(cid=>{const c=getQ(cid);return c?c.nombre:'?';}).join(', ')||'—';
+    const monto=esSocio?montoSocio:e.sueldo;
+    const esActivo=activo&&!skipped;
+
+    // Estado+pago: single toggle button
+    let estadoBtn='';
+    if(skipped){
+      estadoBtn=`<span class="badge b-gr" style="font-size:11px;padding:5px 12px">No trabajó</span>`;
+    } else if(!activo){
+      estadoBtn=`<span class="badge b-gr" style="font-size:11px;padding:5px 12px">Inactivo</span>`;
+    } else {
+      estadoBtn=`<button onclick="togglePagoEq(${e.id})" style="
+        background:${p?'rgba(45,202,114,.15)':'rgba(232,184,74,.12)'};
+        border:1.5px solid ${p?'rgba(45,202,114,.4)':'rgba(232,184,74,.35)'};
+        color:${p?'var(--green)':'var(--yellow)'};
+        border-radius:9px;padding:7px 16px;font-size:12px;font-weight:700;
+        cursor:pointer;font-family:Montserrat,sans-serif;transition:all .15s;
+        min-width:110px;display:flex;align-items:center;justify-content:center;gap:5px
+      ">${p?'✓ Pagado':'⏳ Pendiente'}</button>`;
+    }
+
+    // X para marcar/desmarcar "no trabajó este mes"
+    const skipBtn=activo?`<button onclick="toggleSkip(${e.id})" title="${skipped?'Reactivar para este mes':'No trabajó este mes'}" style="
+      background:${skipped?'rgba(26,115,232,.12)':'rgba(255,255,255,.05)'};
+      border:1px solid ${skipped?'rgba(26,115,232,.3)':'var(--border)'};
+      color:${skipped?'var(--blue-l)':'var(--text3)'};
+      border-radius:7px;padding:5px 10px;font-size:13px;font-weight:700;
+      cursor:pointer;font-family:Montserrat,sans-serif;transition:all .15s
+    ">${skipped?'↩':'✕'}</button>`:'';
+
+    return`<tr style="${esActivo?'':'opacity:.5'}">
+      <td><div class="erow">
+        <div class="av" style="background:${e.color};color:#fff">${ini(e.nombre)}</div>
+        <div>
+          <div style="font-weight:700">${e.nombre}${e.dedicacion==='part'?' <span class="badge b-y" style="font-size:9px">Part time</span>':e.dedicacion==='freelance'?' <span class="badge b-p" style="font-size:9px">Freelance</span>':''}</div>
+          <div style="font-size:10px;color:var(--text2)">${e.rol||''}</div>
+        </div>
+      </div></td>
+      <td><span class="badge ${esSocio?'b-bl':'b-gr'}">${esSocio?'Socio':'Empleado'}</span></td>
+      <td style="font-size:11px;color:var(--blue-l)">${cNames}</td>
+      <td><strong>${fmt(monto,e.moneda)}</strong></td>
+      <td style="color:var(--text2)">Día ${dia}</td>
+      <td>${estadoBtn}</td>
+      <td>${skipBtn}</td>
+    </tr>`;
+  };
+
+  tb.innerHTML=
+    empleados.map(e=>rowEmp(e,false,0)).join('')+
+    `<tr><td colspan="7" style="padding:5px 16px;background:var(--surface2);border-top:1.5px solid var(--border);border-bottom:1.5px solid var(--border)">
+      <div style="font-size:9px;color:var(--text3);letter-spacing:2px;font-weight:700;text-transform:uppercase">Socios — distribución del neto del mes</div>
+    </td></tr>`+
+    socios.map(e=>rowEmp(e,true,e.nombre==='Dio'?dioAmt:santiAmt)).join('');
+}
+
+// ─── CHARTS ──────────────────────────────────────────────────────────────────
+function destroyChart(name){if(charts[name]){charts[name].destroy();delete charts[name];}}
+
+function renderDashCharts(){
+  // Chart 1: ingresos por cliente
+  const ctxCl=document.getElementById('ch-clientes');if(!ctxCl)return;
+  destroyChart('cl');
+  const activos=S.clientes.filter(c=>c.estado==='activo');
+  if(activos.length){
+    charts.cl=new Chart(ctxCl.getContext('2d'),{
+      type:'doughnut',
+      data:{labels:activos.map(c=>c.nombre),datasets:[{data:activos.map(c=>retainer(c)),backgroundColor:COLS,borderWidth:0,hoverOffset:6}]},
+      options:{responsive:true,plugins:{legend:{position:'bottom',labels:{color:'#7a7a8c',font:{family:'Montserrat',size:10},boxWidth:10,padding:8}},tooltip:{callbacks:{label:ctx=>' '+fmt(ctx.raw)+' ARS'}}}}
+    });
+  }
+  // Chart 2: Recurrentes vs Puntuales
+  const ctxT=document.getElementById('ch-tipos');if(!ctxT)return;
+  destroyChart('tipos');
+  const rrss=S.clientes.filter(c=>c.estado==='activo'&&(c.tipo==='rrss'||c.tipo==='rrss+pauta')).reduce((s,c)=>s+retainer(c),0);
+  const pauta=S.clientes.filter(c=>c.estado==='activo'&&(c.tipo==='pauta'||c.tipo==='rrss+pauta')).reduce((s,c)=>s+retainer(c)/((c.tipo==='rrss+pauta'?2:1)),0);
+  const oneshot=getOneShotsMes();
+  if(rrss||pauta||oneshot){
+    charts.tipos=new Chart(ctxT.getContext('2d'),{
+      type:'bar',
+      data:{labels:['Redes Sociales','Pauta / Ads','Puntual'],
+        datasets:[{data:[rrss,pauta,oneshot],backgroundColor:['#1A73E8','#9b6fe8','#2dca72'],borderRadius:8,borderSkipped:false}]},
+      options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+fmt(ctx.raw)}}},
+        scales:{x:{grid:{display:false},ticks:{color:'#7a7a8c',font:{family:'Montserrat',size:10}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#7a7a8c',font:{family:'Montserrat',size:10},callback:v=>'$'+Number(v/1000).toFixed(0)+'k'}}}}
+    });
+  }
+  // Chart 3: costos
+  const ctxC=document.getElementById('ch-costos');if(!ctxC)return;
+  destroyChart('costos');
+  const nomina=getNomina(),fijos=getGastosFijos();
+  if(nomina||fijos){
+    // por empleado + fijos
+    const eActivos=S.empleados.filter(e=>e.estado==='activo');
+    const labels=[...eActivos.map(e=>e.nombre),'Gastos Fijos'];
+    const data=[...eActivos.map(e=>e.sueldo||0),Math.round(fijos)];
+    const bg=[...eActivos.map((_,i)=>COLS[i%COLS.length]),'#e8484a'];
+    charts.costos=new Chart(ctxC.getContext('2d'),{
+      type:'doughnut',
+      data:{labels,datasets:[{data,backgroundColor:bg,borderWidth:0,hoverOffset:6}]},
+      options:{responsive:true,plugins:{legend:{position:'bottom',labels:{color:'#7a7a8c',font:{family:'Montserrat',size:10},boxWidth:10,padding:8}},tooltip:{callbacks:{label:ctx=>' '+fmt(ctx.raw)}}}}
+    });
+  }
+}
+
+// ─── RENDER COBROS ───────────────────────────────────────────────────────────
+function renderCobros(){
+  const activos=S.clientes.filter(c=>c.estado==='activo');
+  let cob=0,pen=0;
+  activos.forEach(c=>{const a=retainer(c);if(isPagadoC(c.id))cob+=a;else pen+=a;});
+  const setV=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  setV('c-cobrado',fmt(cob));setV('c-pendiente',fmt(pen));setV('c-total',fmt(cob+pen));
+  const grid=document.getElementById('cobros-grid');if(!grid)return;
+  if(!activos.length){grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text2)">Sin clientes activos.</div>';return;}
+  grid.innerHTML=activos.map(c=>{
+    const a=retainer(c),p=isPagadoC(c.id),fact=isFacturado(c.id);
+    const eNames=(c.empleadoIds||[]).map(eid=>{const e=getE(eid);return e?e.nombre:'?';}).join(', ');
+    return`<div class="cc ${p?'pagado':'pendiente'}">
+      <div class="cctop">
+        <div><div class="ccname">${c.nombre}</div><div class="ccserv">${TIPO_LABEL[c.tipo]||c.tipo}</div></div>
+        <div class="ccamt" style="color:${p?'var(--green)':'var(--yellow)'}">${fmt(a,c.moneda)}</div>
+      </div>
+      ${eNames?`<div style="font-size:10px;color:var(--text2)">👤 ${eNames}</div>`:''}
+      ${c.servicios?`<div style="font-size:10px;color:var(--text3);font-style:italic;line-height:1.4">${c.servicios}</div>`:''}
+      <button onclick="toggleFactura(${c.id})" style="
+        width:100%;padding:8px;border-radius:8px;font-size:11px;font-weight:700;
+        cursor:pointer;font-family:Montserrat,sans-serif;transition:all .15s;
+        display:flex;align-items:center;justify-content:center;gap:5px;
+        background:${fact?'rgba(45,202,114,.12)':'rgba(255,255,255,.04)'};
+        border:1px solid ${fact?'rgba(45,202,114,.35)':'var(--border)'};
+        color:${fact?'var(--green)':'var(--text2)'}
+      ">${fact?'✓ Factura enviada':'📄 Marcar factura como enviada'}</button>
+      <button class="tpago ${p?'pagado':'pendiente'}" onclick="toggleCobro(${c.id})">${p?'✓ Cobrado — clic para desmarcar':'⏳ Pendiente — marcar como cobrado'}</button>
+    </div>`;
+  }).join('');
+}
+
+// ─── RENDER CLIENTES ─────────────────────────────────────────────────────────
+function renderClientes(){
+  const tb=document.getElementById('tbody-clientes');if(!tb)return;
+  let lista=S.clientes;
+  if(clienteTab==='rrss')lista=lista.filter(c=>c.tipo==='rrss'||c.tipo==='rrss+pauta');
+  else if(clienteTab==='pauta')lista=lista.filter(c=>c.tipo==='pauta'||c.tipo==='rrss+pauta');
+  else if(clienteTab==='otros')lista=lista.filter(c=>!['rrss','pauta','rrss+pauta'].includes(c.tipo));
+  const total=S.clientes.filter(c=>c.estado==='activo').reduce((s,c)=>s+retainer(c),0);
+  const el=document.getElementById('mrr-total');if(el)el.textContent='Recurrente: '+fmt(total);
+  if(!lista.length){tb.innerHTML='<tr><td colspan="7"><div class="empty">Sin clientes.</div></td></tr>';return;}
+  tb.innerHTML=lista.map(c=>{
+    const eNames=(c.empleadoIds||[]).map(eid=>{const e=getE(eid);return e?`<span class="badge b-bl" style="margin-right:3px">${e.nombre}</span>`:''}).join('');
+    return`<tr>
+      <td><strong>${c.nombre}</strong>${c.contacto?`<br><span style="font-size:10px;color:var(--text2)">${c.contacto}</span>`:''}</td>
+      <td><span class="badge ${TIPO_BADGE[c.tipo]||'b-gr'}">${TIPO_LABEL[c.tipo]||c.tipo}</span></td>
+      <td style="font-size:11px;color:var(--text2);max-width:180px">${c.servicios||'—'}</td>
+      <td>${eNames||'<span style="color:var(--text3)">Sin asignar</span>'}</td>
+      <td><strong>${fmt(retainer(c),c.moneda)}</strong></td>
+      <td><span class="badge ${c.estado==='activo'?'b-g':c.estado==='pausado'?'b-y':'b-gr'}">${c.estado}</span></td>
+      <td><button class="btn bd bsm" onclick="delCliente(${c.id})">✕</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── RENDER PROYECTOS ────────────────────────────────────────────────────────
+function openPagoExtra(nombre,cliente,moneda){
+  document.getElementById('pe-nombre').value=nombre;
+  document.getElementById('pe-cliente').value=cliente;
+  document.getElementById('pe-moneda').value=moneda||'ARS';
+  document.getElementById('pe-monto').value='';
+  document.getElementById('pe-fecha').value='';
+  document.getElementById('pe-etapa').value='Pago extra';
+  openModal('m-pago-extra');
+}
+function addPagoExtra(){
+  const nombre=document.getElementById('pe-nombre').value;
+  const cliente=document.getElementById('pe-cliente').value;
+  const monto=parseFloat(document.getElementById('pe-monto').value)||0;
+  if(!monto)return alert('Ingresá el monto');
+  S.proyectos.push({
+    id:Date.now(),nombre,cliente,monto,
+    moneda:document.getElementById('pe-moneda').value,
+    etapa:document.getElementById('pe-etapa').value||'Pago extra',
+    fecha:document.getElementById('pe-fecha').value,
+    empNombre:'',empCosto:0,
+    estado:'pendiente',desc:'Pago adicional'
+  });
+  save();closeModal('m-pago-extra');renderProyectos();renderDash();
+}
+
+function togglePagoProy(id){
+  // Toggle the cobrado state of a single pago (proyecto entry)
+  const p=S.proyectos.find(x=>x.id===id);if(!p)return;
+  if(p.estado==='cobrado'){
+    p.estado='pendiente';
+    // Clear fecha if it was auto-set? No, keep it. Just change state.
+  } else {
+    p.estado='cobrado';
+  }
+  save();renderProyectos();renderDash();
+}
+
+function renderProyectos(){
+  const container=document.getElementById('proyectos-list');if(!container)return;
+  const oneshots=S.proyectos.filter(p=>isOneShot(p));
+  const cob=oneshots.filter(p=>p.estado==='cobrado').reduce((s,p)=>s+p.monto,0);
+  const pen=oneshots.filter(p=>p.estado!=='cobrado').reduce((s,p)=>s+p.monto,0);
+  const setV=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  setV('ps-cobrado',fmt(cob));setV('ps-pendiente',fmt(pen));
+
+  // Group by nombre+cliente
+  const grupos={};
+  oneshots.forEach(p=>{
+    const key=`${p.nombre}||${p.cliente}`;
+    if(!grupos[key])grupos[key]={nombre:p.nombre,cliente:p.cliente,pagos:[],moneda:p.moneda};
+    grupos[key].pagos.push(p);
+  });
+  const gruposList=Object.values(grupos).sort((a,b)=>{
+    const lastA=a.pagos.map(p=>p.fecha||'').sort().reverse()[0]||'';
+    const lastB=b.pagos.map(p=>p.fecha||'').sort().reverse()[0]||'';
+    return lastB.localeCompare(lastA);
+  });
+  setV('ps-count',gruposList.length);
+
+  if(!gruposList.length){
+    container.innerHTML=`<div class="empty" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:40px">Sin proyectos puntuales. Los one-shots son páginas web, branding y presentaciones.</div>`;
+    return;
+  }
+
+  container.innerHTML=gruposList.map((g,gi)=>{
+    const totalG=g.pagos.reduce((s,p)=>s+p.monto,0);
+    const cobradoG=g.pagos.filter(p=>p.estado==='cobrado').reduce((s,p)=>s+p.monto,0);
+    const allCobrado=g.pagos.every(p=>p.estado==='cobrado');
+    const someCobrado=g.pagos.some(p=>p.estado==='cobrado');
+    const statusColor=allCobrado?'var(--green)':someCobrado?'var(--yellow)':'var(--text2)';
+    const progPct=Math.round((cobradoG/Math.max(totalG,1))*100);
+
+    const pagosHtml=g.pagos.sort((a,b)=>(a.etapa||'').localeCompare(b.etapa||'')).map(p=>{
+      const cobrado=p.estado==='cobrado';
+      const fechaStr=p.fecha?new Date(p.fecha+'T12:00').toLocaleDateString('es-AR',{day:'2-digit',month:'short',year:'2-digit'}):'—';
+      const neto=p.monto-(p.empCosto||0);
+      const socio=Math.round(neto*0.4);
+      return`<div class="proj-pago-row">
+        <div class="proj-pago-etapa" style="color:${cobrado?'var(--green)':'var(--text2)'}">${p.etapa||'Pago'}</div>
+        <div class="proj-pago-fecha">📅 ${fechaStr}</div>
+        <div class="proj-pago-monto">${fmt(p.monto,p.moneda)}</div>
+        <div class="proj-pago-emp">${p.empNombre?`👤 ${p.empNombre} <span style="color:var(--red)">-${fmt(p.empCosto)}</span>`:''}<br><span style="color:var(--blue-l);font-size:10px">Socios: ${fmt(socio)} c/u</span></div>
+        <button class="proj-pago-toggle ${cobrado?'cobrado':'pendiente'}" onclick="togglePagoProy(${p.id})">${cobrado?'✓ Cobrado':'⏳ Pendiente'}</button>
+        <button onclick="delProyecto(${p.id})" style="background:var(--red-d);border:1px solid rgba(232,72,74,.2);color:var(--red);border-radius:7px;padding:5px 9px;cursor:pointer;font-size:12px;font-family:Montserrat,sans-serif">✕</button>
+      </div>`;
+    }).join('');
+
+    return`<div class="proj-group">
+      <div class="proj-group-header" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div class="proj-group-name">${g.nombre}</div>
+            <span class="badge ${allCobrado?'b-g':someCobrado?'b-y':'b-gr'}">${allCobrado?'Completado':someCobrado?'Parcial':'Pendiente'}</span>
+          </div>
+          <div class="proj-group-meta">
+            ${g.cliente} · ${g.pagos.length} pago${g.pagos.length>1?'s':''} ·
+            <span style="color:${statusColor};font-weight:700">${fmt(cobradoG)} cobrado</span> de ${fmt(totalG)}
+            &nbsp;·&nbsp;
+            <span style="background:var(--surface3);border-radius:4px;padding:1px 7px;font-size:10px">
+              <span style="color:${statusColor}">${progPct}%</span>
+            </span>
+          </div>
+        </div>
+        <div class="proj-group-total" style="color:${statusColor}">${fmt(totalG,g.moneda)}</div>
+        <div style="color:var(--text3);font-size:14px;margin-left:4px">▾</div>
+      </div>
+      <div class="proj-group-body">${pagosHtml}
+        <div style="padding:10px 18px;border-top:1px dashed var(--border)">
+          <button onclick="openPagoExtra('${g.nombre.replace(/'/g,"\\'")}','${g.cliente.replace(/'/g,"\\'")}','${g.moneda}')" style="background:var(--surface2);border:1px dashed var(--border);color:var(--text2);border-radius:8px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;font-family:Montserrat,sans-serif;transition:all .15s;display:flex;align-items:center;gap:5px">
+            <span style="font-size:14px">+</span> Agregar pago extra (si se alargó el proyecto)
+          </button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleEstadoEmp(id){
+  const e=S.empleados.find(x=>x.id===id);
+  if(e){e.estado=e.estado==='activo'?'inactivo':'activo';save();render();}
+}
+function saveRol(id){
+  const e=S.empleados.find(x=>x.id===id);if(!e)return;
+  const r=document.getElementById('rol-'+id);
+  const d=document.getElementById('ded-'+id);
+  if(r)e.rol=r.value.trim();
+  if(d)e.dedicacion=d.value;
+  save();renderEquipo();renderDash();
+}
+
+// ─── RENDER EQUIPO ───────────────────────────────────────────────────────────
+function renderEquipo(){
+  const activos=S.empleados.filter(e=>e.estado==='activo');
+  const total=activos.reduce((s,e)=>s+(e.sueldo||0),0);
+  const setV=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  setV('eq-nomina',fmt(total));setV('eq-count',S.empleados.length);setV('eq-anual',fmt(total*12));
+  const tb=document.getElementById('tbody-equipo');if(!tb)return;
+  if(!S.empleados.length){tb.innerHTML='<tr><td colspan="7"><div class="empty">Sin equipo.</div></td></tr>';return;}
+  const esSocio=e=>['Dio','Santi'].includes(e.nombre);
+  tb.innerHTML=S.empleados.map(e=>{
+    const activo=e.estado==='activo';
+    const cNames=(e.clienteIds||[]).map(cid=>{const c=getQ(cid);return c?`<span class="badge b-bl" style="margin-right:3px">${c.nombre}</span>`:''}).join('')||'<span style="color:var(--text3)">Sin asignar</span>';
+    const dedOpts=['full','part','freelance'].map(v=>`<option value="${v}" ${(e.dedicacion||'full')===v?'selected':''}>${v==='full'?'Full time':v==='part'?'Part time':'Freelance'}</option>`).join('');
+    const dedColor=e.dedicacion==='part'?'b-y':e.dedicacion==='freelance'?'b-p':'b-g';
+    const dedLabel=e.dedicacion==='part'?'Part time':e.dedicacion==='freelance'?'Freelance':'Full time';
+
+    // Socios: no editable inline
+    const rolCell=esSocio(e)
+      ? `<div style="font-weight:600">${e.rol||'—'} <span class="badge ${dedColor}" style="font-size:9px">${dedLabel}</span></div>`
+      : `<div style="display:flex;flex-direction:column;gap:5px">
+          <input id="rol-${e.id}" value="${e.rol||''}" onblur="saveRol(${e.id})" placeholder="Rol..." style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-family:Montserrat,sans-serif;font-size:12px;font-weight:600;outline:none;width:180px">
+          <select id="ded-${e.id}" onchange="saveRol(${e.id})" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text);font-family:Montserrat,sans-serif;font-size:11px;outline:none;width:130px">${dedOpts}</select>
+        </div>`;
+
+    return`<tr style="${activo?'':'opacity:.6'}">
+      <td><div class="erow"><div class="av" style="background:${e.color};color:#fff">${ini(e.nombre)}</div>
+        <div><div style="font-weight:700">${e.nombre}</div><div style="font-size:10px;color:var(--text2)">${e.email||''}</div></div></div></td>
+      <td>${rolCell}</td>
+      <td>${cNames}</td>
+      <td><strong>${fmt(e.sueldo,e.moneda)}</strong></td>
+      <td>Día ${e.dia}</td>
+      <td><span class="badge ${activo?'b-g':'b-gr'}">${e.estado}</span></td>
+      <td style="display:flex;gap:6px">
+        <button class="btn ${activo?'bg':'bs'} bsm" onclick="toggleEstadoEmp(${e.id})">${activo?'Pausar':'Activar'}</button>
+        <button class="btn bd bsm" onclick="delEmpleado(${e.id})">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── RENDER GASTOS ───────────────────────────────────────────────────────────
+function renderGastos(){
+  const men=getGastosFijos(),an=S.gastos.filter(g=>g.frecuencia==='anual').reduce((s,g)=>s+g.monto,0);
+  const setV=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  setV('g-fijo',fmt(men));setV('g-anual',fmt(an));setV('g-total',fmt(men*12+an));
+  const tb=document.getElementById('tbody-gastos');if(!tb)return;
+  if(!S.gastos.length){tb.innerHTML='<tr><td colspan="5"><div class="empty">Sin gastos.</div></td></tr>';return;}
+  tb.innerHTML=S.gastos.map(g=>`<tr>
+    <td><strong>${g.concepto}</strong></td>
+    <td><span class="badge b-bl">${g.categoria}</span></td>
+    <td><strong>${fmt(g.monto,g.moneda)}</strong></td>
+    <td>${g.frecuencia}</td>
+    <td><button class="btn bd bsm" onclick="delGasto(${g.id})">✕</button></td>
+  </tr>`).join('');
+}
+
+// ─── RENDER PROYECCION ───────────────────────────────────────────────────────
+function saveCotiz(){
+  const v=parseFloat(document.getElementById('pr-cotiz')?.value)||1500;
+  S.cotizacion=v;save();renderProyeccion();
+}
+function saveFondo(){
+  const v=parseFloat(document.getElementById('pr-fondo-edit')?.value)||0;
+  S.fondoUSD=v;save();renderProyeccion();
+}
+
+function renderProyeccion(){
+  const mrr=getMRR(),nom=getNomina(),gf=getGastosFijos(),costos=nom+gf,neto=mrr-costos;
+  const cotiz=S.cotizacion||1500;
+  const setV=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  setV('pr-mrr',fmt(mrr));setV('pr-costos',fmt(costos));setV('pr-neto',fmt(neto));setV('pr-anual',fmt(neto*12));
+  setV('pr-break',fmt(costos));
+  setV('pr-neto-sub','Dio '+fmt(Math.max(0,Math.round(neto*0.4)))+' · Santi '+fmt(Math.max(0,Math.round(neto*0.4))));
+  setV('pr-anual-sub','Dio '+fmt(Math.max(0,Math.round(neto*0.4*12)))+' · Santi '+fmt(Math.max(0,Math.round(neto*0.4*12))));
+  setV('pr-dio-anual',fmt(Math.max(0,Math.round(neto*0.4*12))));
+  setV('pr-santi-anual',fmt(Math.max(0,Math.round(neto*0.4*12))));
+  setV('pr-agencia-anual',fmt(Math.max(0,Math.round(neto*0.2*12))));
+
+  // ── HISTORIAL ANM (4 meses) ──────────────────────────────────────────────
+  // Agrupar proyectos por mes para el flujo real
+  const mesesMap={};
+  S.proyectos.forEach(p=>{
+    if(!p.fecha)return;
+    const d=new Date(p.fecha+'T12:00');
+    const k=`${d.getFullYear()}-${String(d.getMonth()).padStart(2,'0')}`;
+    if(!mesesMap[k])mesesMap[k]={ing:0,costoEmp:0};
+    mesesMap[k].ing+=p.monto;
+    mesesMap[k].costoEmp+=p.empCosto||0;
+  });
+  const histKeys=Object.keys(mesesMap).sort().slice(-6);
+
+  const histTotalIng=Object.values(mesesMap).reduce((s,m)=>s+m.ing,0);
+  const histTotalCostoEmp=Object.values(mesesMap).reduce((s,m)=>s+m.costoEmp,0);
+  // Costo fijo mensual x 4 meses
+  const histCostoFijo=costos*4;
+  const histTotalCostos=histTotalCostoEmp+histCostoFijo;
+  const histNeto=histTotalIng-histTotalCostos;
+
+  setV('pr-hist-total',fmt(histTotalIng));
+  setV('pr-hist-costos',fmt(histTotalCostos));
+  setV('pr-hist-neto',fmt(histNeto));
+  // Dio/Santi inside the neto card
+  const el_dio=document.getElementById('pr-hist-dio');if(el_dio)el_dio.textContent=fmt(Math.max(0,Math.round(histNeto*0.4)));
+  const el_san=document.getElementById('pr-hist-santi');if(el_san)el_san.textContent=fmt(Math.max(0,Math.round(histNeto*0.4)));
+
+  // Fondo real (editable)
+  const fondoUSD=S.fondoUSD||0;
+  const fondoARS=Math.round(fondoUSD*cotiz);
+  const fondoEditEl=document.getElementById('pr-fondo-edit');
+  if(fondoEditEl&&document.activeElement!==fondoEditEl)fondoEditEl.value=fondoUSD;
+  setV('pr-fondo-ars-eq','≈ '+fmt(fondoARS)+' ARS');
+  const cotizEl=document.getElementById('pr-cotiz');
+  if(cotizEl&&document.activeElement!==cotizEl)cotizEl.value=cotiz;
+
+  // Flujo chart — barras ing vs costos + línea neto por mes
+  const ctxF=document.getElementById('ch-flujo');
+  destroyChart('flujo');
+  if(ctxF&&histKeys.length){
+    const flLabels=histKeys.map(k=>{const[y,m]=k.split('-');return MONTHS[parseInt(m)].substring(0,3)+' '+y.slice(2);});
+    const flIng=histKeys.map(k=>mesesMap[k].ing);
+    const flCost=histKeys.map(k=>mesesMap[k].costoEmp+(costos)); // emp cost + fijos
+    const flNeto=histKeys.map(k=>mesesMap[k].ing-mesesMap[k].costoEmp-costos);
+    charts.flujo=new Chart(ctxF.getContext('2d'),{
+      type:'bar',
+      data:{labels:flLabels,datasets:[
+        {label:'Ingresos',data:flIng,backgroundColor:'rgba(26,115,232,.6)',borderRadius:6,borderSkipped:false,order:2},
+        {label:'Costos',data:flCost,backgroundColor:'rgba(232,72,74,.45)',borderRadius:6,borderSkipped:false,order:2},
+        {label:'Neto',data:flNeto,type:'line',borderColor:'#2dca72',backgroundColor:'rgba(45,202,114,.1)',tension:.4,fill:true,pointRadius:5,pointBackgroundColor:'#2dca72',borderWidth:2.5,order:1},
+      ]},
+      options:{responsive:true,interaction:{mode:'index',intersect:false},
+        scales:{x:{grid:{display:false},ticks:{color:'#7a7a8c',font:{family:'Montserrat',size:10}}},
+          y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#7a7a8c',font:{family:'Montserrat',size:10},callback:v=>'$'+Number(v/1000000).toFixed(1)+'M'}}},
+        plugins:{legend:{labels:{color:'#7a7a8c',font:{family:'Montserrat',size:11},usePointStyle:true,padding:14}}}}
+    });
+  }
+
+  // Bars proyección futura
+  const bEl=document.getElementById('pr-bars');if(bEl){
+    bEl.innerHTML='';
+    const max=Math.max(mrr,1);
+    for(let i=0;i<6;i++){
+      const mi=(S.mes+i)%12;
+      const row=document.createElement('div');row.className='prow';
+      row.innerHTML=`<div class="plabel">${MONTHS[mi].substring(0,3)}</div>
+        <div class="ptrack"><div class="pfill" style="width:100%;background:${i===0?'var(--blue)':'var(--surface3)'}"></div></div>
+        <div class="pval" style="color:${i===0?'var(--blue)':'var(--text)'}">${fmt(mrr)}</div>`;
+      bEl.appendChild(row);
+    }
+  }
+  // Breakdown
+  const aEl=document.getElementById('pr-breakdown');if(aEl){
+    aEl.innerHTML=[
+      {l:'Ingresos Recurrentes × 12',v:mrr*12,c:'var(--green)'},
+      {l:'Nómina anual',v:-nom*12,c:'var(--red)'},
+      {l:'Gastos fijos × 12',v:-gf*12,c:'var(--red)'},
+      {l:'Neto anual',v:neto*12,c:neto>=0?'var(--blue)':'var(--red)',b:true},
+      {l:'→ Socios 80% (Dio + Santi)',v:Math.max(0,neto*0.8*12),c:'var(--blue)'},
+      {l:'   · Dio (40%)',v:Math.max(0,neto*0.4*12),c:'var(--blue-l)'},
+      {l:'   · Santi (40%)',v:Math.max(0,neto*0.4*12),c:'var(--blue-l)'},
+      {l:'→ Agencia (20%)',v:Math.max(0,neto*0.2*12),c:'var(--text2)'},
+    ].map(it=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)">
+      <div style="font-size:11px;color:${it.b?'var(--text)':'var(--text2)'};font-weight:${it.b?'800':'500'}">${it.l}</div>
+      <div style="color:${it.c};font-size:${it.b?15:12}px;font-weight:800">${fmt(Math.abs(it.v))}</div>
+    </div>`).join('');
+  }
+  renderDashCharts();
+  // Chart proyección 12m — expected (MRR) vs real (cobrado por mes)
+  const ctx1=document.getElementById('ch-proyeccion');if(!ctx1)return;
+  destroyChart('proy');
+  const labels=[],dEsp=[],dReal=[],dNeto=[];
+  for(let i=0;i<12;i++){
+    const mi=(S.mes+i)%12;
+    const yi=S.mes+i>=12?S.anio+1:S.anio;
+    labels.push(MONTHS[mi].substring(0,3));
+    dEsp.push(mrr);
+    dNeto.push(neto);
+    // Real: sum cobros de ese mes-año
+    const realMes=S.clientes.filter(c=>{
+      const k=`c-${c.id}-${mi}-${yi}`;
+      return S.cobros.some(x=>x.key===k);
+    }).reduce((s,c)=>s+retainer(c),0);
+    dReal.push(realMes>0?realMes:null);
+  }
+  charts.proy=new Chart(ctx1.getContext('2d'),{
+    type:'line',
+    data:{labels,datasets:[
+      {label:'Facturación Esperada',data:dEsp,borderColor:'rgba(26,115,232,.5)',borderDash:[6,3],backgroundColor:'rgba(26,115,232,.04)',tension:.3,fill:true,pointRadius:3,borderWidth:2,pointBackgroundColor:'rgba(26,115,232,.5)'},
+      {label:'Facturación Real (cobrado)',data:dReal,borderColor:'#1A73E8',backgroundColor:'rgba(26,115,232,.12)',tension:.3,fill:true,pointRadius:4,borderWidth:2.5,pointBackgroundColor:'#1A73E8',spanGaps:false},
+      {label:'Ganancia Neta (est.)',data:dNeto,borderColor:'#2dca72',backgroundColor:'rgba(45,202,114,.07)',tension:.3,fill:true,pointRadius:3,borderWidth:2,pointBackgroundColor:'#2dca72'},
+    ]},
+    options:{responsive:true,interaction:{mode:'index',intersect:false},
+      scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#7a7a8c',font:{family:'Montserrat',size:10}}},
+        y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#7a7a8c',font:{family:'Montserrat',size:10},callback:v=>'$'+Number(v/1000).toFixed(0)+'k'}}},
+      plugins:{legend:{labels:{color:'#7a7a8c',font:{family:'Montserrat',size:11},usePointStyle:true,padding:16}}}}
+  });
+
+  // Historico por mes
+  const ctx2=document.getElementById('ch-historico');if(!ctx2)return;
+  destroyChart('hist');
+  // Agrupar proyectos por mes
+  const mesesHist={};
+  S.proyectos.forEach(p=>{
+    if(!p.fecha)return;
+    const d=new Date(p.fecha+'T12:00');
+    const k=`${d.getFullYear()}-${String(d.getMonth()).padStart(2,'0')}`;
+    mesesHist[k]=(mesesHist[k]||0)+p.monto;
+  });
+  const keys=Object.keys(mesesHist).sort().slice(-8);
+  const histLabels=keys.map(k=>{const[y,m]=k.split('-');return MONTHS[parseInt(m)].substring(0,3)+' '+y.slice(2);});
+  const histData=keys.map(k=>mesesHist[k]||0);
+  if(keys.length>0){
+    charts.hist=new Chart(ctx2.getContext('2d'),{
+      type:'bar',
+      data:{labels:histLabels,datasets:[{label:'Ingresos mensuales',data:histData,backgroundColor:'rgba(26,115,232,.7)',borderRadius:8,borderSkipped:false,hoverBackgroundColor:'#1A73E8'}]},
+      options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+fmt(ctx.raw)}}},
+        scales:{x:{grid:{display:false},ticks:{color:'#7a7a8c',font:{family:'Montserrat',size:10}}},
+          y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#7a7a8c',font:{family:'Montserrat',size:10},callback:v=>'$'+Number(v/1000).toFixed(0)+'k'}}}}
+    });
+  }
+}
+
+// ─── RENDER CONFIG ───────────────────────────────────────────────────────────
+function renderConfig(){
+  const grid=document.getElementById('cfg-clientes');if(!grid)return;
+  const activos=S.clientes.filter(c=>c.estado==='activo');
+  if(!activos.length){grid.innerHTML='<div style="color:var(--text2);font-size:12px">No hay clientes activos.</div>';return;}
+  grid.innerHTML=activos.map((c,i)=>{
+    const v=c.presupuesto??c.retainer??0;
+    const empTags=S.empleados.map(e=>{
+      const assigned=(e.clienteIds||[]).includes(c.id);
+      return`<span class="checktag ${assigned?'on':''}" onclick="toggleEmpCliente(${e.id},${c.id})">${e.nombre}</span>`;
+    }).join('');
+    return`<div class="cfcard">
+      <div class="cfname"><div class="av" style="background:${COLS[i%COLS.length]};color:#fff;width:26px;height:26px;font-size:10px">${ini(c.nombre)}</div>
+        ${c.nombre} <span class="badge ${TIPO_BADGE[c.tipo]||'b-gr'}" style="margin-left:4px">${TIPO_LABEL[c.tipo]||c.tipo}</span>
+      </div>
+      <div class="cflabel" style="margin-bottom:5px">Retainer mensual acordado</div>
+      <div class="cfinline" style="margin-bottom:12px">
+        <span style="color:var(--text2);font-weight:700">$</span>
+        <input type="number" id="bgt-${c.id}" value="${v}" onchange="savePres(${c.id})">
+        <span style="font-size:11px;color:var(--text2);font-weight:600">${c.moneda}</span>
+      </div>
+      <div class="cflabel">Servicios acordados</div>
+      <div class="cfservices" style="margin-bottom:12px">
+        <textarea id="srv-${c.id}" onchange="saveSrv(${c.id})" placeholder="Ej: 3 posts/sem, stories, reels×2, reportes...">${c.servicios||''}</textarea>
+      </div>
+      <div class="cflabel">Equipo asignado (clic para asignar/desasignar)</div>
+      <div class="tags-wrap">${empTags||'<span style="color:var(--text3);font-size:11px">Sin equipo</span>'}</div>
+    </div>`;
+  }).join('');
+}
+
+function savePres(id){
+  const c=S.clientes.find(x=>x.id===id);if(!c)return;
+  c.presupuesto=parseFloat(document.getElementById('bgt-'+id).value)||0;
+  save();renderCobros();renderClientes();renderDash();
+}
+function saveSrv(id){
+  const c=S.clientes.find(x=>x.id===id);if(!c)return;
+  c.servicios=document.getElementById('srv-'+id).value;
+  save();renderClientes();renderCobros();
+}
+
+function resetData(){
+  if(!confirm('¿Resetear TODO?'))return;
+  localStorage.removeItem('anm_v6');
+  S={clientes:[],proyectos:[],empleados:[],gastos:[],cobros:[],pagosEq:[],skips:[],facturas:[],cotizacion:1500,fondoUSD:1047.75,mes:new Date().getMonth(),anio:new Date().getFullYear()};
+  initSeed();saveToSupabase();render();
+}
+
+// ─── RENDER DISPATCHER ───────────────────────────────────────────────────────
+function renderPage(page){
+  if(page==='dashboard')renderDash();
+  else if(page==='cobros'){renderCobros();}
+  else if(page==='clientes')renderClientes();
+  else if(page==='proyectos')renderProyectos();
+  else if(page==='equipo')renderEquipo();
+  else if(page==='gastos')renderGastos();
+  else if(page==='proyeccion'){renderProyeccion();}
+  else if(page==='config')renderConfig();
+}
+function render(){
+  renderDash();renderCobros();renderClientes();renderProyectos();
+  renderEquipo();renderGastos();renderProyeccion();renderConfig();
+  ['d-mlabel','c-mlabel'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=MONTHS[S.mes]+' '+S.anio;});
+}
+
+// ─── SEED DATA ───────────────────────────────────────────────────────────────
+function initSeed(){
+  if(S.clientes&&S.clientes.length)return;
+
+  S.clientes=[
+    {id:101,nombre:'Mipileta', tipo:'rrss',     servicios:'Community management, contenido, reels',retainer:1700000,moneda:'ARS',contacto:'',estado:'activo',empleadoIds:[204,205],presupuesto:null},
+    {id:102,nombre:'Modulo',   tipo:'rrss',     servicios:'Community management, contenido mensual',retainer:420000,moneda:'ARS',contacto:'',estado:'activo',empleadoIds:[203],presupuesto:null},
+    {id:103,nombre:'Coarmi',   tipo:'pauta',    servicios:'Gestión de pauta Meta + Google',retainer:250000,moneda:'ARS',contacto:'',estado:'activo',empleadoIds:[203],presupuesto:null},
+    {id:104,nombre:'Antquera', tipo:'rrss',     servicios:'Community management, contenido, reels',retainer:1350000,moneda:'ARS',contacto:'',estado:'activo',empleadoIds:[205],presupuesto:null},
+    {id:105,nombre:'Froz',     tipo:'rrss',     servicios:'Redes sociales completas',retainer:800000,moneda:'ARS',contacto:'',estado:'activo',empleadoIds:[],presupuesto:null},
+  ];
+
+  S.empleados=[
+    {id:201,nombre:'Dio',        rol:'Socio — 40%',           sueldo:0,     moneda:'ARS',dia:5, dedicacion:'full',     estado:'activo',email:'',color:'#1A73E8',clienteIds:[]},
+    {id:202,nombre:'Santi',      rol:'Socio — 40%',           sueldo:0,     moneda:'ARS',dia:5, dedicacion:'full',     estado:'activo',email:'',color:'#4d96ff',clienteIds:[]},
+    {id:203,nombre:'Belen',      rol:'Community Manager',     sueldo:150000,moneda:'ARS',dia:1, dedicacion:'part',     estado:'activo',email:'',color:'#9b6fe8',clienteIds:[102,103]},
+    {id:204,nombre:'Luisina',    rol:'Community Manager',     sueldo:550000,moneda:'ARS',dia:1, dedicacion:'part',     estado:'activo',email:'',color:'#2dca72',clienteIds:[101]},
+    {id:205,nombre:'Ori',        rol:'Community Manager',     sueldo:500000,moneda:'ARS',dia:1, dedicacion:'freelance',estado:'activo',email:'',color:'#e8b84a',clienteIds:[101,104]},
+    {id:206,nombre:'Luli Pagani',rol:'Diseñadora',            sueldo:600000,moneda:'ARS',dia:1, dedicacion:'freelance',estado:'activo',email:'',color:'#2dcab4',clienteIds:[]},
+  ];
+  // Sueldo Ori: 280k (Mipileta) + 220k (Antquera) = 500k
+  // Actualizar clienteIds en clientes también
+  S.clientes[0].empleadoIds=[204,205]; // Mipileta → Luisina + Ori
+  S.clientes[1].empleadoIds=[203];      // Modulo → Belen
+  S.clientes[2].empleadoIds=[203];      // Coarmi → Belen
+  S.clientes[3].empleadoIds=[205];      // Antquera → Ori
+
+  // ─── PROYECTOS — solo one-shots reales (web, branding)
+  // Páginas web: 50% al arrancar (Pago 1) + 50% al entregar (Pago 2)
+  S.proyectos=[
+    // COARMI — Página web — total ~619.290 (281.790 + 337.500) ≈ 50/50
+    {id:1, nombre:'Página web',cliente:'Coarmi',   monto:281790, moneda:'ARS',fecha:'2025-09-19',estado:'cobrado',  etapa:'Pago 1 (50%)',empNombre:'',          empCosto:0,     desc:'Inicio — en dólares x186'},
+    {id:3, nombre:'Página web',cliente:'Coarmi',   monto:337500, moneda:'ARS',fecha:'2025-10-31',estado:'cobrado',  etapa:'Pago 2 (50%)',empNombre:'',          empCosto:0,     desc:'Entrega final'},
+
+    // LA BARATA — Branding — total 900.000 (450k + 450k)
+    {id:2, nombre:'Branding',  cliente:'La Barata',monto:450000, moneda:'ARS',fecha:'2025-10-10',estado:'cobrado',  etapa:'Pago 1 (50%)',empNombre:'Luli Pagani',empCosto:100000,desc:'Inicio'},
+    {id:12,nombre:'Branding',  cliente:'La Barata',monto:450000, moneda:'ARS',fecha:'2025-12-06',estado:'pendiente',etapa:'Pago 2 (50%)',empNombre:'Luli Pagani',empCosto:100000,desc:'Entrega final'},
+
+    // MIPILETA — Página web — total 1.850.000 (925k + 925k)
+    {id:6, nombre:'Página web',cliente:'Mipileta', monto:925000, moneda:'ARS',fecha:'2025-10-29',estado:'cobrado',  etapa:'Pago 1 (50%)',empNombre:'',          empCosto:0,     desc:'Inicio'},
+    {id:11,nombre:'Página web',cliente:'Mipileta', monto:925000, moneda:'ARS',fecha:'2025-12-10',estado:'pendiente',etapa:'Pago 2 (50%)',empNombre:'',          empCosto:0,     desc:'Entrega final'},
+
+    // FROZ — Página web — total 700.000 (350k + 350k)
+    {id:7, nombre:'Página web',cliente:'Froz',     monto:350000, moneda:'ARS',fecha:'2025-11-04',estado:'cobrado',  etapa:'Pago 1 (50%)',empNombre:'',          empCosto:0,     desc:'Inicio'},
+    {id:15,nombre:'Página web',cliente:'Froz',     monto:350000, moneda:'ARS',fecha:'2025-12-04',estado:'pendiente',etapa:'Pago 2 (50%)',empNombre:'',          empCosto:0,     desc:'Entrega final'},
+
+    // TELTECO — Página web — total 300.000 (150k + 150k)
+    {id:13,nombre:'Página web',cliente:'Telteco',  monto:150000, moneda:'ARS',fecha:'2025-12-06',estado:'cobrado',  etapa:'Pago 1 (50%)',empNombre:'',          empCosto:0,     desc:'Inicio'},
+    {id:33,nombre:'Página web',cliente:'Telteco',  monto:150000, moneda:'ARS',fecha:'2026-02-06',estado:'pendiente',etapa:'Pago 2 (50%)',empNombre:'',          empCosto:0,     desc:'Entrega final'},
+
+    // RRSS histórico que sirve para el flujo (no aparecen en one-shots, solo para historial)
+    {id:4, nombre:'RRSS',      cliente:'Modulo',   monto:420000, moneda:'ARS',fecha:'2025-10-28',estado:'cobrado',  etapa:'Mensual', empNombre:'Belen',      empCosto:150000,desc:'Oct'},
+    {id:5, nombre:'RRSS',      cliente:'Mipileta', monto:1700000,moneda:'ARS',fecha:'2025-10-28',estado:'cobrado',  etapa:'Mensual', empNombre:'Luisina+Ori',empCosto:830000,desc:'Oct'},
+    {id:8, nombre:'Pauta',     cliente:'Coarmi',   monto:250000, moneda:'ARS',fecha:'2025-11-15',estado:'cobrado',  etapa:'Mensual', empNombre:'Belen',      empCosto:150000,desc:'Nov'},
+    {id:9, nombre:'RRSS',      cliente:'Mipileta', monto:1700000,moneda:'ARS',fecha:'2025-11-28',estado:'cobrado',  etapa:'Mensual', empNombre:'Luisina+Ori',empCosto:830000,desc:'Nov'},
+    {id:10,nombre:'RRSS',      cliente:'Modulo',   monto:420000, moneda:'ARS',fecha:'2025-11-28',estado:'cobrado',  etapa:'Mensual', empNombre:'Belen',      empCosto:150000,desc:'Nov'},
+    {id:14,nombre:'Pauta',     cliente:'Coarmi',   monto:250000, moneda:'ARS',fecha:'2025-12-15',estado:'cobrado',  etapa:'Mensual', empNombre:'Belen',      empCosto:150000,desc:'Dic'},
+    {id:16,nombre:'RRSS',      cliente:'Mipileta', monto:1700000,moneda:'ARS',fecha:'2025-12-28',estado:'cobrado',  etapa:'Mensual', empNombre:'Luisina+Ori',empCosto:830000,desc:'Dic'},
+    {id:17,nombre:'RRSS',      cliente:'Modulo',   monto:420000, moneda:'ARS',fecha:'2025-12-28',estado:'cobrado',  etapa:'Mensual', empNombre:'Belen',      empCosto:150000,desc:'Dic'},
+    {id:22,nombre:'RRSS',      cliente:'Antquera', monto:1350000,moneda:'ARS',fecha:'2026-01-27',estado:'cobrado',  etapa:'Mensual', empNombre:'Ori',        empCosto:220000,desc:'Ene'},
+    {id:23,nombre:'RRSS',      cliente:'Mipileta', monto:1700000,moneda:'ARS',fecha:'2026-01-28',estado:'cobrado',  etapa:'Mensual', empNombre:'Luisina+Ori',empCosto:830000,desc:'Ene'},
+    {id:24,nombre:'RRSS',      cliente:'Modulo',   monto:420000, moneda:'ARS',fecha:'2026-01-28',estado:'cobrado',  etapa:'Mensual', empNombre:'Belen',      empCosto:150000,desc:'Ene'},
+    {id:25,nombre:'RRSS',      cliente:'Coarmi',   monto:403000, moneda:'ARS',fecha:'2026-01-28',estado:'cobrado',  etapa:'Proyecto',empNombre:'',           empCosto:0,     desc:'Ene'},
+    {id:30,nombre:'RRSS',      cliente:'Antquera', monto:1750000,moneda:'ARS',fecha:'2026-02-27',estado:'cobrado',  etapa:'Mensual', empNombre:'Ori',        empCosto:220000,desc:'Feb'},
+    {id:31,nombre:'RRSS',      cliente:'Mipileta', monto:1700000,moneda:'ARS',fecha:'2026-02-28',estado:'cobrado',  etapa:'Mensual', empNombre:'Luisina+Ori',empCosto:830000,desc:'Feb'},
+    {id:32,nombre:'RRSS',      cliente:'Modulo',   monto:420000, moneda:'ARS',fecha:'2026-02-28',estado:'cobrado',  etapa:'Mensual', empNombre:'Belen',      empCosto:150000,desc:'Feb'},
+  ];
+
+  S.gastos=[];
+  S.cotizacion=1500;
+  S.fondoUSD=1047.75;
+  S.mes=2;S.anio=2026;
+  save();
+}
+
+// ─── BOOT ────────────────────────────────────────────────────────────────────
+load(); // load from localStorage first (instant, no flash)
+if(!S.cobros)S.cobros=[];
+if(!S.pagosEq)S.pagosEq=[];
+if(!S.skips)S.skips=[];
+if(!S.facturas)S.facturas=[];
+if(!S.clientes||!S.clientes.length)S={clientes:[],proyectos:[],empleados:[],gastos:[],cobros:[],pagosEq:[],skips:[],facturas:[],cotizacion:1500,fondoUSD:1047.75,mes:2,anio:2026};
+initSeed();
+setTimeout(()=>{
+  const sBlock=document.getElementById('mp-single-block');
+  const fBlock=document.getElementById('mp-5050-block');
+  if(sBlock)sBlock.style.display='none';
+  if(fBlock)fBlock.style.display='block';
+},0);
+render();
+// Then sync from Supabase in background — if has newer data, re-render
+loadFromSupabase().then(loaded=>{
+  if(loaded){
+    if(!S.cobros)S.cobros=[];
+    if(!S.pagosEq)S.pagosEq=[];
+    if(!S.skips)S.skips=[];
+    if(!S.facturas)S.facturas=[];
+    render();
+  } else {
+    // First time: push local seed data to Supabase
+    saveToSupabase();
+  }
+});
+</script>
+</body>
+</html>
