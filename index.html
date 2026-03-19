@@ -1049,15 +1049,22 @@ function getMRR(){
 }
 // Retorna true si el empleado trabajaba en el mes actual de S
 function empleadoActivoEnMes(e){
+  if(['Dio','Santi'].includes(e.nombre)) return false; // socios no van en nómina
   const mesActual=`${S.anio}-${String(S.mes).padStart(2,'0')}`;
-  // Chequear inicio laboral
-  if(e.inicioLaboral && e.inicioLaboral > mesActual) return false;
-  // Chequear fin laboral (si tiene fecha de salida)
+  // Chequear inicio laboral — si no tiene fecha, solo aparece en el mes actual en adelante
+  if(e.inicioLaboral){
+    if(e.inicioLaboral > mesActual) return false;
+  } else {
+    // Sin inicioLaboral: solo aparece si está activo y es el mes actual o futuro
+    const hoy=`${new Date().getFullYear()}-${String(new Date().getMonth()).padStart(2,'0')}`;
+    if(mesActual < hoy) return false;
+  }
+  // Chequear fin laboral
   if(e.finLaboral && e.finLaboral < mesActual) return false;
   // Chequear skip puntual del mes
   const skipKey=`skip-${e.id}-${S.mes}-${S.anio}`;
   if((S.skips||[]).includes(skipKey)) return false;
-  return e.estado==='activo'||!!e.finLaboral; // activos O ex-empleadas con fechas
+  return e.estado==='activo'||!!e.finLaboral;
 }
 
 function getSueldoEnMes(e){
@@ -1073,8 +1080,9 @@ function getSueldoEnMes(e){
 }
 
 function getNomina(){
+  // Exactamente los mismos empleados que aparecen en la tabla de pagos
   return S.empleados
-    .filter(e=>!['Dio','Santi'].includes(e.nombre) && empleadoActivoEnMes(e))
+    .filter(e=>empleadoActivoEnMes(e))
     .reduce((s,e)=>s+getSueldoEnMes(e),0);
 }
 function getGastosFijos(){return S.gastos.reduce((s,g)=>{if(g.frecuencia==='mensual')return s+g.monto;if(g.frecuencia==='anual')return s+g.monto/12;return s;},0);}
@@ -1372,8 +1380,18 @@ function renderDashEquipo(dioAmt=0,santiAmt=0){
     </tr>`;
   };
 
+  const totalNomina=empleados.reduce((s,e)=>s+getSueldoEnMes(e),0);
+
   tb.innerHTML=
     empleados.map(e=>rowEmp(e,false,0)).join('')+
+    `<tr>
+      <td colspan="3" style="padding:10px 16px;background:var(--surface2);border-top:2px solid var(--border)">
+        <div style="font-size:10px;color:var(--text2);font-weight:700;text-transform:uppercase;letter-spacing:1.5px">Total equipo este mes</div>
+      </td>
+      <td colspan="4" style="padding:10px 16px;background:var(--surface2);border-top:2px solid var(--border)">
+        <strong style="font-size:15px;color:var(--red)">${fmt(totalNomina)}</strong>
+      </td>
+    </tr>`+
     `<tr><td colspan="7" style="padding:5px 16px;background:var(--surface2);border-top:1.5px solid var(--border);border-bottom:1.5px solid var(--border)">
       <div style="font-size:9px;color:var(--text3);letter-spacing:2px;font-weight:700;text-transform:uppercase">Socios — distribución del neto del mes</div>
     </td></tr>`+
@@ -2175,10 +2193,14 @@ function initSeed(){
   S.empleados=[
     {id:201,nombre:'Dio',        rol:'Socio — 40%',           sueldo:0,     moneda:'ARS',dia:5, dedicacion:'full',     estado:'activo', email:'',color:'#1A73E8',clienteIds:[]},
     {id:202,nombre:'Santi',      rol:'Socio — 40%',           sueldo:0,     moneda:'ARS',dia:5, dedicacion:'full',     estado:'activo', email:'',color:'#4d96ff',clienteIds:[]},
+    // Belen: activa desde sep 2025
     {id:203,nombre:'Belen',      rol:'Community Manager',     sueldo:150000,moneda:'ARS',dia:1, dedicacion:'part',     estado:'activo', email:'',color:'#9b6fe8',clienteIds:[102,103],inicioLaboral:'2025-09'},
-    {id:204,nombre:'Luisina',    rol:'Community Manager',     sueldo:550000,moneda:'ARS',dia:1, dedicacion:'part',     estado:'activo', email:'',color:'#2dca72',clienteIds:[101],inicioLaboral:'2025-09'},
+    // Luisina: arrancó mar 2026
+    {id:204,nombre:'Luisina',    rol:'Community Manager',     sueldo:550000,moneda:'ARS',dia:1, dedicacion:'part',     estado:'activo', email:'',color:'#2dca72',clienteIds:[101],inicioLaboral:'2026-03'},
+    // Ori: desde sep 2025
     {id:205,nombre:'Ori',        rol:'Community Manager',     sueldo:500000,moneda:'ARS',dia:1, dedicacion:'freelance',estado:'activo', email:'',color:'#e8b84a',clienteIds:[101,104],inicioLaboral:'2025-09'},
-    {id:206,nombre:'Luli Pagani',rol:'Diseñadora',            sueldo:600000,moneda:'ARS',dia:1, dedicacion:'freelance',estado:'activo', email:'',color:'#2dcab4',clienteIds:[],inicioLaboral:'2025-09'},
+    // Luli Pagani: arrancó mar 2026
+    {id:206,nombre:'Luli Pagani',rol:'Diseñadora',            sueldo:600000,moneda:'ARS',dia:1, dedicacion:'freelance',estado:'activo', email:'',color:'#2dcab4',clienteIds:[],inicioLaboral:'2026-03'},
     // Mile: ene→feb 2026
     {id:207,nombre:'Mile',       rol:'Community Manager',     sueldo:250000,moneda:'ARS',dia:1, dedicacion:'part',     estado:'inactivo',email:'',color:'#e8704a',clienteIds:[104],inicioLaboral:'2026-01',finLaboral:'2026-02'},
     // Martu: sep 2025→feb 2026
