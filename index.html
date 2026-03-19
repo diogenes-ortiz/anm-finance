@@ -2043,32 +2043,85 @@ function renderProyeccion(){
   setV('pr-santi-anual',fmt(Math.max(0,Math.round(neto*0.4*12))));
   setV('pr-agencia-anual',fmt(Math.max(0,Math.round(neto*0.2*12))));
 
-  // ── HISTORIAL ANM (4 meses) ──────────────────────────────────────────────
-  // Agrupar proyectos por mes para el flujo real
-  const mesesMap={};
-  S.proyectos.forEach(p=>{
-    if(!p.fecha)return;
-    const d=new Date(p.fecha+'T12:00');
-    const k=`${d.getFullYear()}-${String(d.getMonth()).padStart(2,'0')}`;
-    if(!mesesMap[k])mesesMap[k]={ing:0,costoEmp:0};
-    mesesMap[k].ing+=p.monto;
-    mesesMap[k].costoEmp+=p.empCosto||0;
-  });
-  const histKeys=Object.keys(mesesMap).sort().slice(-6);
+  // ── HISTORIAL ANM — calcular mes por mes desde el inicio ──────────────────
+  // Determinar rango: desde sep 2025 hasta mes actual
+  const mesInicio={anio:2025,mes:8}; // sep 2025 (mes=8 porque 0-indexed)
+  const mesFin={anio:S.anio,mes:S.mes};
+  const mesesHistorial=[];
+  let cursor={...mesInicio};
+  while(cursor.anio<mesFin.anio||(cursor.anio===mesFin.anio&&cursor.mes<=mesFin.mes)){
+    mesesHistorial.push({...cursor});
+    cursor.mes++;
+    if(cursor.mes>11){cursor.mes=0;cursor.anio++;}
+  }
 
-  const histTotalIng=Object.values(mesesMap).reduce((s,m)=>s+m.ing,0);
-  const histTotalCostoEmp=Object.values(mesesMap).reduce((s,m)=>s+m.costoEmp,0);
-  // Costo fijo mensual x 4 meses
-  const histCostoFijo=costos*4;
-  const histTotalCostos=histTotalCostoEmp+histCostoFijo;
+  // Para cada mes: calcular ingresos reales (retainers vigentes + one-shots cobrados) y costos reales
+  const histData=mesesHistorial.map(({mes,anio})=>{
+    const mesStr=`${anio}-${String(mes).padStart(2,'0')}`;
+
+    // Ingresos: retainers de clientes vigentes ese mes
+    const retainersMes=S.clientes
+      .filter(c=>{
+        if(c.estado!=='activo')return false;
+        if(c.inicioServicio&&c.inicioServicio>mesStr)return false;
+        return true;
+      })
+      .reduce((s,c)=>{
+        // Buscar retainer vigente para ese mes
+        if(c.retainerHistory&&c.retainerHistory.length){
+          const vigentes=c.retainerHistory
+            .filter(h=>h.desde<=mesStr)
+            .sort((a,b)=>b.desde.localeCompare(a.desde));
+          return s+(vigentes.length?vigentes[0].monto:0);
+        }
+        return s+(c.presupuesto??c.retainer??0);
+      },0);
+
+    // One-shots cobrados ese mes
+    const oneshots=S.proyectos
+      .filter(p=>{
+        if(!p.fecha||p.estado!=='cobrado')return false;
+        const d=new Date(p.fecha+'T12:00');
+        return d.getFullYear()===anio&&d.getMonth()===mes;
+      })
+      .reduce((s,p)=>s+p.monto,0);
+
+    const ing=retainersMes+oneshots;
+
+    // Costos: empleados activos ese mes
+    const costoEmp=S.empleados
+      .filter(e=>{
+        if(['Dio','Santi'].includes(e.nombre))return false;
+        if(e.inicioLaboral&&e.inicioLaboral>mesStr)return false;
+        if(e.finLaboral&&e.finLaboral<mesStr)return false;
+        if(e.estado==='inactivo'&&!e.finLaboral)return false;
+        const sk=`skip-${e.id}-${mes}-${anio}`;
+        if((S.skips||[]).includes(sk))return false;
+        return true;
+      })
+      .reduce((s,e)=>s+getSueldoEnMes(e),0);
+
+    const costoFijo=getGastosFijos();
+    const costos=costoEmp+costoFijo;
+    const neto=ing-costos;
+
+    return{mes,anio,mesStr,ing,costos,neto,label:MONTHS[mes].substring(0,3)+' '+String(anio).slice(2)};
+  });
+
+  const histTotalIng=histData.reduce((s,m)=>s+m.ing,0);
+  const histTotalCostos=histData.reduce((s,m)=>s+m.costos,0);
   const histNeto=histTotalIng-histTotalCostos;
+  const histMeses=histData.length||1;
 
   setV('pr-hist-total',fmt(histTotalIng));
   setV('pr-hist-costos',fmt(histTotalCostos));
   setV('pr-hist-neto',fmt(histNeto));
-  // Dio/Santi inside the neto card
   const el_dio=document.getElementById('pr-hist-dio');if(el_dio)el_dio.textContent=fmt(Math.max(0,Math.round(histNeto*0.4)));
   const el_san=document.getElementById('pr-hist-santi');if(el_san)el_san.textContent=fmt(Math.max(0,Math.round(histNeto*0.4)));
+
+  // Subtítulo con cantidad de meses
+  const histSubEl=document.getElementById('pr-hist-sub');
+  if(histSubEl)histSubEl.textContent=`Historial desde el inicio (${histMeses} meses)`;
 
   // Fondo real (editable)
   const fondoUSD=S.fondoUSD||0;
@@ -2082,11 +2135,11 @@ function renderProyeccion(){
   // Flujo chart — barras ing vs costos + línea neto por mes
   const ctxF=document.getElementById('ch-flujo');
   destroyChart('flujo');
-  if(ctxF&&histKeys.length){
-    const flLabels=histKeys.map(k=>{const[y,m]=k.split('-');return MONTHS[parseInt(m)].substring(0,3)+' '+y.slice(2);});
-    const flIng=histKeys.map(k=>mesesMap[k].ing);
-    const flCost=histKeys.map(k=>mesesMap[k].costoEmp+(costos)); // emp cost + fijos
-    const flNeto=histKeys.map(k=>mesesMap[k].ing-mesesMap[k].costoEmp-costos);
+  if(ctxF&&histData.length){
+    const flLabels=histData.map(m=>m.label);
+    const flIng=histData.map(m=>m.ing);
+    const flCost=histData.map(m=>m.costos);
+    const flNeto=histData.map(m=>m.neto);
     charts.flujo=new Chart(ctxF.getContext('2d'),{
       type:'bar',
       data:{labels:flLabels,datasets:[
@@ -2174,11 +2227,11 @@ function renderProyeccion(){
   });
   const keys=Object.keys(mesesHist).sort().slice(-8);
   const histLabels=keys.map(k=>{const[y,m]=k.split('-');return MONTHS[parseInt(m)].substring(0,3)+' '+y.slice(2);});
-  const histData=keys.map(k=>mesesHist[k]||0);
+  const histDataChart=keys.map(k=>mesesHist[k]||0);
   if(keys.length>0){
     charts.hist=new Chart(ctx2.getContext('2d'),{
       type:'bar',
-      data:{labels:histLabels,datasets:[{label:'Ingresos mensuales',data:histData,backgroundColor:'rgba(26,115,232,.7)',borderRadius:8,borderSkipped:false,hoverBackgroundColor:'#1A73E8'}]},
+      data:{labels:histLabels,datasets:[{label:'Ingresos mensuales',data:histDataChart,backgroundColor:'rgba(26,115,232,.7)',borderRadius:8,borderSkipped:false,hoverBackgroundColor:'#1A73E8'}]},
       options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+fmt(ctx.raw)}}},
         scales:{x:{grid:{display:false},ticks:{color:'#7a7a8c',font:{family:'Montserrat',size:10}}},
           y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#7a7a8c',font:{family:'Montserrat',size:10},callback:v=>'$'+Number(v/1000).toFixed(0)+'k'}}}}
