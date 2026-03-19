@@ -1061,15 +1061,20 @@ function getSueldoEnMes(e){
 function empleadoActivoEnMes(e){
   if(['Dio','Santi'].includes(e.nombre)) return false;
   const mesActual=`${S.anio}-${String(S.mes).padStart(2,'0')}`;
-  if(e.inicioLaboral){
-    if(e.inicioLaboral > mesActual) return false;
-  } else {
+  // Si está inactivo SIN finLaboral → nunca mostrar
+  if(e.estado==='inactivo' && !e.finLaboral) return false;
+  // Chequear inicio laboral
+  if(e.inicioLaboral && e.inicioLaboral > mesActual) return false;
+  // Sin inicioLaboral y activo → solo mes actual en adelante
+  if(!e.inicioLaboral && e.estado==='activo'){
     const hoy=`${new Date().getFullYear()}-${String(new Date().getMonth()).padStart(2,'0')}`;
     if(mesActual < hoy) return false;
   }
-  // finLaboral: si el último mes fue X, en X+1 ya no aparece
+  // finLaboral: '2026-02' significa que feb fue su último mes
+  // En marzo ('2026-03'): '2026-02' < '2026-03' → excluir ✅
+  // En febrero ('2026-02'): '2026-02' < '2026-02' = false → incluir ✅
   if(e.finLaboral && e.finLaboral < mesActual) return false;
-  if(e.estado==='inactivo' && !e.finLaboral) return false;
+  // Skip puntual
   const skipKey=`skip-${e.id}-${S.mes}-${S.anio}`;
   if((S.skips||[]).includes(skipKey)) return false;
   return true;
@@ -2266,6 +2271,15 @@ if(!S.facturas)S.facturas=[];
 if(!S.extras)S.extras=[];
 if(!S.clientesPausados)S.clientesPausados=[];
 if(!S.transferencias)S.transferencias=[];
+
+// Parche: asegurar que Mile y Martu tengan finLaboral correcto aunque vengan de Supabase viejo
+if(S.empleados&&S.empleados.length){
+  S.empleados.forEach(e=>{
+    if(e.nombre==='Mile'&&!e.finLaboral){e.finLaboral='2026-02';e.inicioLaboral=e.inicioLaboral||'2026-01';e.estado='inactivo';}
+    if(e.nombre==='Martu'&&!e.finLaboral){e.finLaboral='2026-02';e.inicioLaboral=e.inicioLaboral||'2025-09';e.estado='inactivo';}
+  });
+}
+
 if(!S.clientes||!S.clientes.length)S={clientes:[],proyectos:[],empleados:[],gastos:[],cobros:[],pagosEq:[],skips:[],facturas:[],cotizacion:1500,fondoUSD:1047.75,mes:2,anio:2026};
 initSeed();
 setTimeout(()=>{
