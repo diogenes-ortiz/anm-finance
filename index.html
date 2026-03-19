@@ -162,12 +162,12 @@ tr:hover td{background:rgba(26,115,232,.03)}
 .proj-group-meta{font-size:11px;color:var(--text2);margin-top:2px}
 .proj-group-total{font-size:16px;font-weight:800;text-align:right}
 .proj-group-body{border-top:1px solid var(--border)}
-.proj-pago-row{display:flex;align-items:center;gap:12px;padding:11px 18px;border-bottom:1px solid var(--border);transition:background .12s}
+.proj-pago-row{display:flex;align-items:center;gap:14px;padding:12px 18px;border-bottom:1px solid var(--border);transition:background .12s}
 .proj-pago-row:last-child{border-bottom:none}
 .proj-pago-row:hover{background:var(--surface2)}
-.proj-pago-etapa{font-size:12px;font-weight:700;width:70px;flex-shrink:0}
-.proj-pago-fecha{font-size:11px;color:var(--text2);width:90px;flex-shrink:0}
-.proj-pago-monto{font-size:13px;font-weight:800;flex:1}
+.proj-pago-etapa{font-size:12px;font-weight:700;width:80px;flex-shrink:0}
+.proj-pago-fecha{display:flex;flex-direction:column;gap:3px;width:130px;flex-shrink:0}
+.proj-pago-monto{font-size:14px;font-weight:800;width:110px;flex-shrink:0}
 .proj-pago-emp{font-size:10px;color:var(--text2);flex:1}
 .proj-pago-toggle{padding:6px 14px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:none;font-family:Montserrat,sans-serif;transition:all .15s;white-space:nowrap;display:flex;align-items:center;gap:5px}
 .proj-pago-toggle.cobrado{background:var(--green-d);color:var(--green);border:1px solid rgba(45,202,114,.3)}
@@ -231,9 +231,9 @@ tr:hover td{background:rgba(26,115,232,.03)}
 </button>
 
 <aside class="sidebar">
-  <div class="logo">
-    <img src="https://diogenes-ortiz.github.io/anm-finance/Logo_anm_content_studio.jpg" alt="ANM Content Studio" style="width:160px;border-radius:8px;display:block;margin-bottom:6px">
-    <div class="logo-sub" style="margin-top:2px">Finance</div>
+    <div class="logo">
+    <div class="logo-anm">ANM</div>
+    <div class="logo-sub">Content Studio · Finance</div>
     <div id="sync-status" style="font-size:9px;margin-top:6px;font-weight:700;color:var(--text3);transition:color .3s">💾 Local</div>
   </div>
   <nav class="nav">
@@ -1053,8 +1053,10 @@ function renderDash(){
   setV('d-pendiente',fmt(pendiente));setV('d-pendiente-sub',pendN+' cliente'+(pendN!==1?'s':'')+' sin cobrar');
   setV('d-dio',fmt(dio));setV('d-santi',fmt(santi));
 
+  // Client breakdown chips — green if paid, red if not yet
+  const activos=S.clientes.filter(c=>c.estado==='activo');
+
   // Cobrado real vs pendiente para socios
-  // Real = solo clientes que ya pagaron este mes
   const realCobrado=activos.filter(c=>isPagadoC(c.id)).reduce((s,c)=>s+retainer(c),0);
   const osMes=getOneShotsMes();
   const ingReal=realCobrado+osMes;
@@ -1065,8 +1067,6 @@ function renderDash(){
   setS('d-dio-real',fmt(dioReal));setS('d-dio-pend',fmt(dioPend));
   setS('d-santi-real',fmt(dioReal));setS('d-santi-pend',fmt(dioPend));
 
-  // Client breakdown chips — green if paid, red if not yet
-  const activos=S.clientes.filter(c=>c.estado==='activo');
   const chipHtml=activos.map(c=>{
     const p=isPagadoC(c.id);
     return`<div style="
@@ -1285,6 +1285,12 @@ function addPagoExtra(){
   save();closeModal('m-pago-extra');renderProyectos();renderDash();
 }
 
+function saveFechaPago(id, fecha){
+  const p=S.proyectos.find(x=>x.id===id);if(!p)return;
+  p.fecha=fecha;
+  save();renderProyectos();renderDash();
+}
+
 function togglePagoProy(id){
   // Toggle the cobrado state of a single pago (proyecto entry)
   const p=S.proyectos.find(x=>x.id===id);if(!p)return;
@@ -1334,12 +1340,18 @@ function renderProyectos(){
 
     const pagosHtml=g.pagos.sort((a,b)=>(a.etapa||'').localeCompare(b.etapa||'')).map(p=>{
       const cobrado=p.estado==='cobrado';
-      const fechaStr=p.fecha?new Date(p.fecha+'T12:00').toLocaleDateString('es-AR',{day:'2-digit',month:'short',year:'2-digit'}):'—';
       const neto=p.monto-(p.empCosto||0);
       const socio=Math.round(neto*0.4);
+      // Detect which month this pago falls in
+      const fechaMes=p.fecha?new Date(p.fecha+'T12:00'):null;
+      const mesLabel=fechaMes?MONTHS[fechaMes.getMonth()]+' '+fechaMes.getFullYear():'Sin fecha';
       return`<div class="proj-pago-row">
         <div class="proj-pago-etapa" style="color:${cobrado?'var(--green)':'var(--text2)'}">${p.etapa||'Pago'}</div>
-        <div class="proj-pago-fecha">📅 ${fechaStr}</div>
+        <div class="proj-pago-fecha" style="display:flex;flex-direction:column;gap:2px">
+          <input type="date" value="${p.fecha||''}" onchange="saveFechaPago(${p.id},this.value)"
+            style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:3px 6px;color:var(--text);font-family:Montserrat,sans-serif;font-size:10px;outline:none;width:120px;cursor:pointer">
+          <div style="font-size:9px;color:${cobrado?'var(--green)':'var(--blue-l)'};font-weight:700">→ ${mesLabel}</div>
+        </div>
         <div class="proj-pago-monto">${fmt(p.monto,p.moneda)}</div>
         <div class="proj-pago-emp">${p.empNombre?`👤 ${p.empNombre} <span style="color:var(--red)">-${fmt(p.empCosto)}</span>`:''}<br><span style="color:var(--blue-l);font-size:10px">Socios: ${fmt(socio)} c/u</span></div>
         <button class="proj-pago-toggle ${cobrado?'cobrado':'pendiente'}" onclick="togglePagoProy(${p.id})">${cobrado?'✓ Cobrado':'⏳ Pendiente'}</button>
