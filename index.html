@@ -1824,8 +1824,8 @@ function renderConfig(){
       const [y,m]=h.desde.split('-');
       const label=MONTHS[parseInt(m)]+' '+y;
       return`<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);gap:8px">
-        <div style="font-size:11px;color:var(--text2);flex-shrink:0">${label}</div>
-        <div style="font-size:12px;font-weight:700;color:var(--text)">${fmt(h.monto)}</div>
+        <input type="month" value="${h.desde}" onchange="editRetainerDesde(${c.id},'${h.desde}',this.value)" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:3px 7px;color:var(--text);font-family:Montserrat,sans-serif;font-size:11px;outline:none;flex-shrink:0;width:130px">
+        <div style="font-size:12px;font-weight:700;color:var(--text);flex-shrink:0">${fmt(h.monto)}</div>
         <div style="font-size:10px;color:var(--text3);flex:1;text-align:right;font-style:italic">${h.nota||''}</div>
         ${histSorted.length>1?`<button onclick="borrarRetainerHistory(${c.id},'${h.desde}')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:12px;padding:0 2px;flex-shrink:0">✕</button>`:''}
       </div>`;
@@ -1874,6 +1874,16 @@ function savePres(id){
   else c.retainerHistory.push({monto,desde,nota});
   c.presupuesto=monto; // mantener compatibilidad
   save();renderConfig();renderCobros();renderClientes();renderDash();
+}
+
+function editRetainerDesde(cid, desdeViejo, desdeNuevo){
+  const c=S.clientes.find(x=>x.id===cid);if(!c||!c.retainerHistory)return;
+  // Verificar que no haya conflicto con otra entrada del mismo mes
+  const conflicto=c.retainerHistory.find(h=>h.desde===desdeNuevo&&h.desde!==desdeViejo);
+  if(conflicto)return alert('Ya existe una entrada para ese mes. Borrá la anterior primero.');
+  const entry=c.retainerHistory.find(h=>h.desde===desdeViejo);
+  if(entry)entry.desde=desdeNuevo;
+  save();renderConfig();renderDash();
 }
 
 function borrarRetainerHistory(cid,desde){
