@@ -2296,9 +2296,20 @@ loadFromSupabase().then(loaded=>{
     if(!S.pagosEq)S.pagosEq=[];
     if(!S.skips)S.skips=[];
     if(!S.facturas)S.facturas=[];
+    if(!S.extras)S.extras=[];
+    if(!S.clientesPausados)S.clientesPausados=[];
+    if(!S.transferencias)S.transferencias=[];
+    // Parche: forzar finLaboral en Mile y Martu si Supabase los trajo sin él
+    if(S.empleados&&S.empleados.length){
+      let parchado=false;
+      S.empleados.forEach(e=>{
+        if(e.nombre==='Mile'&&!e.finLaboral){e.finLaboral='2026-02';e.inicioLaboral=e.inicioLaboral||'2026-01';e.estado='inactivo';parchado=true;}
+        if(e.nombre==='Martu'&&!e.finLaboral){e.finLaboral='2026-02';e.inicioLaboral=e.inicioLaboral||'2025-09';e.estado='inactivo';parchado=true;}
+      });
+      if(parchado)saveToSupabase(); // guardar el parche en Supabase para que no vuelva a pasar
+    }
     render();
   } else {
-    // First time: push local seed data to Supabase
     saveToSupabase();
   }
 });
