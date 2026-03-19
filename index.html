@@ -196,56 +196,52 @@ tr:hover td{background:rgba(26,115,232,.03)}
 @media(max-width:768px){
   :root{--sidebar:0px;--r:10px}
 
-  /* Sidebar deslizable */
   .sidebar{transform:translateX(-105%);transition:transform .28s cubic-bezier(.4,0,.2,1);width:260px;z-index:150;box-shadow:4px 0 30px rgba(0,0,0,.6)}
   .sidebar.open{transform:translateX(0)}
   .sidebar-overlay.open{display:block}
   .hamburger{display:flex}
-
-  /* Layout */
   .main{margin-left:0}
   .topbar{padding:13px 14px 13px 54px;min-height:52px}
   .ptitle{font-size:14px}
   .content{padding:14px 12px}
 
-  /* Grids */
-  .crow.c4{grid-template-columns:1fr 1fr}
-  .crow.c3{grid-template-columns:1fr 1fr}
-  .crow.c2{grid-template-columns:1fr}
-  .twocol{grid-template-columns:1fr}
-  .chart3{grid-template-columns:1fr}
-  .cgrid{grid-template-columns:1fr}
-  .cfgrid{grid-template-columns:1fr}
-  .fg{grid-template-columns:1fr}
+  /* Todo en 1 columna */
+  .crow,.crow.c4,.crow.c3,.crow.c2{grid-template-columns:1fr;gap:10px;margin-bottom:14px}
+  .twocol,.chart3,.cgrid,.cfgrid,.fg{grid-template-columns:1fr}
 
-  /* Cards más compactas */
-  .card{padding:13px 14px}
-  .cval{font-size:19px}
+  /* Cards */
+  .card,.neto-box{padding:14px 15px}
+  .cval{font-size:22px}
   .clabel{font-size:9px;letter-spacing:1px}
-  .neto-box{padding:13px 14px}
 
-  /* Socios cards — stack vertical */
+  /* Socios: limpiar layout interno */
   .crow.c2 .card{flex-direction:column!important;align-items:flex-start!important;gap:8px!important}
+  #d-dio-breakdown,#d-santi-breakdown{overflow-x:auto;flex-wrap:nowrap!important;padding-bottom:4px}
 
-  /* Cobros grid — 1 columna full */
-  .cgrid{grid-template-columns:1fr;gap:10px}
+  /* Ocultar 40% decorativo */
+  #page-dashboard .crow.c2 .card > div[style*="font-size:28px"]{display:none!important}
+
+  /* Recordatorio */
+  #d-reminder{flex-wrap:wrap}
+
+  /* Cobros */
   .cc{padding:14px}
   .ccname{font-size:15px}
   .ccamt{font-size:20px}
 
-  /* Month nav */
+  /* Nav mes */
   .mnav .mlabel{min-width:90px;font-size:11px}
   .mb{padding:4px 10px;font-size:16px}
 
-  /* Tabla — scroll horizontal */
+  /* Tabla scroll */
   .tw{overflow-x:auto}
   table{font-size:11px;min-width:500px}
   th,td{padding:8px 10px;white-space:nowrap}
 
-  /* Proyectos — simplificar fila pago */
+  /* Proyectos */
   .proj-pago-row{flex-wrap:wrap;gap:8px;padding:10px 14px}
   .proj-pago-etapa{width:auto;font-size:11px}
-  .proj-pago-fecha{width:auto;flex-shrink:1}
+  .proj-pago-fecha{width:auto}
   .proj-pago-fecha input[type=date]{width:110px;font-size:10px}
   .proj-pago-monto{width:auto;font-size:13px}
   .proj-pago-emp{display:none}
@@ -260,21 +256,13 @@ tr:hover td{background:rgba(26,115,232,.03)}
   /* Modales */
   .modal{padding:20px 16px;width:calc(100vw - 28px)!important;max-height:88vh;border-radius:14px}
   .mtitle{font-size:14px;margin-bottom:14px}
-
-  /* KPI fila superior — 2 cols en móvil */
-  .crow.c4{grid-template-columns:1fr 1fr;gap:10px}
-
-  /* Botones de acción */
   .btn{padding:8px 12px;font-size:11px}
   .topbar .btn{padding:7px 11px;font-size:11px}
 }
 
-/* ── MOBILE PEQUEÑO ── */
 @media(max-width:400px){
-  .crow.c4{grid-template-columns:1fr}
-  .crow.c3{grid-template-columns:1fr}
   .content{padding:12px 10px}
-  .cval{font-size:17px}
+  .cval{font-size:20px}
   .topbar{padding:12px 10px 12px 50px}
 }
 </style>
