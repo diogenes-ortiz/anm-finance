@@ -645,6 +645,23 @@ tr:hover td{background:rgba(26,115,232,.03)}
     </div>
     <div class="div"></div>
     <div class="cfsect">
+      <div class="cftitle">Backup & Restore</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="font-size:11px;color:var(--text2);line-height:1.5">Descargá un backup de todos tus datos. Si algo sale mal después de una actualización, podés restaurarlo desde acá.</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn bp" onclick="descargarBackup()" style="display:flex;align-items:center;gap:7px">
+            ⬇ Descargar backup actual
+          </button>
+          <label class="btn bg" style="cursor:pointer;display:flex;align-items:center;gap:7px">
+            ⬆ Restaurar desde backup
+            <input type="file" accept=".json" onchange="restaurarBackup(this)" style="display:none">
+          </label>
+        </div>
+        <div id="backup-status" style="font-size:11px;font-weight:700;display:none"></div>
+      </div>
+    </div>
+    <div class="div"></div>
+    <div class="cfsect">
       <div class="cftitle">Zona de Peligro</div>
       <button class="btn bd" onclick="resetData()">⚠ Resetear todos los datos</button>
     </div>
@@ -2262,6 +2279,41 @@ function saveInicio(id){
   const c=S.clientes.find(x=>x.id===id);if(!c)return;
   c.inicioServicio=document.getElementById('inicio-'+id).value;
   save();renderClientes();
+}
+
+function descargarBackup(){
+  const fecha=new Date();
+  const stamp=`${fecha.getFullYear()}-${String(fecha.getMonth()+1).padStart(2,'0')}-${String(fecha.getDate()).padStart(2,'0')}_${String(fecha.getHours()).padStart(2,'0')}${String(fecha.getMinutes()).padStart(2,'0')}`;
+  const data=JSON.stringify(S,null,2);
+  const blob=new Blob([data],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=`ANM_backup_${stamp}.json`;
+  document.body.appendChild(a);a.click();
+  document.body.removeChild(a);URL.revokeObjectURL(url);
+  const st=document.getElementById('backup-status');
+  if(st){st.style.display='block';st.style.color='var(--green)';st.textContent='✓ Backup descargado — '+stamp;}
+}
+
+function restaurarBackup(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const datos=JSON.parse(e.target.result);
+      if(!datos.clientes||!datos.empleados)throw new Error('Archivo inválido');
+      if(!confirm(`¿Restaurar backup?\nEsto va a reemplazar todos los datos actuales con el backup de "${file.name}".\n\n¿Estás seguro?`))return;
+      Object.assign(S,datos);
+      save();saveToSupabase();render();
+      const st=document.getElementById('backup-status');
+      if(st){st.style.display='block';st.style.color='var(--green)';st.textContent='✓ Backup restaurado correctamente';}
+    }catch(err){
+      const st=document.getElementById('backup-status');
+      if(st){st.style.display='block';st.style.color='var(--red)';st.textContent='✕ Error: archivo inválido o corrupto';}
+    }
+  };
+  reader.readAsText(file);
+  input.value=''; // reset input
 }
 
 function resetData(){
