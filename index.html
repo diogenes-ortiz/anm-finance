@@ -504,7 +504,7 @@ tr:hover td{background:rgba(26,115,232,.03)}
     <div class="tw">
       <div class="th"><div class="tt">Equipo ANM Studio</div></div>
       <table>
-        <thead><tr><th>Persona</th><th>Rol / Dedicación</th><th>Cliente(s) asignado(s)</th><th>Sueldo/mes</th><th>Día pago</th><th>Estado</th><th></th></tr></thead>
+        <thead><tr><th>Persona</th><th>Rol / Dedicación</th><th>Cliente(s)</th><th>Sueldo/mes</th><th>Período laboral</th><th>Estado</th><th></th></tr></thead>
         <tbody id="tbody-equipo"></tbody>
       </table>
     </div>
@@ -1047,7 +1047,36 @@ function getMRR(){
   const extras=activos.reduce((s,c)=>s+getTotalExtra(c.id),0);
   return retainers+extras;
 }
-function getNomina(){return S.empleados.filter(e=>e.estado==='activo').reduce((s,e)=>s+(e.sueldo||0),0);}
+// Retorna true si el empleado trabajaba en el mes actual de S
+function empleadoActivoEnMes(e){
+  const mesActual=`${S.anio}-${String(S.mes).padStart(2,'0')}`;
+  // Chequear inicio laboral
+  if(e.inicioLaboral && e.inicioLaboral > mesActual) return false;
+  // Chequear fin laboral (si tiene fecha de salida)
+  if(e.finLaboral && e.finLaboral < mesActual) return false;
+  // Chequear skip puntual del mes
+  const skipKey=`skip-${e.id}-${S.mes}-${S.anio}`;
+  if((S.skips||[]).includes(skipKey)) return false;
+  return e.estado==='activo'||!!e.finLaboral; // activos O ex-empleadas con fechas
+}
+
+function getSueldoEnMes(e){
+  // Si tiene historial de sueldos, buscar el vigente
+  if(e.sueldoHistory && e.sueldoHistory.length){
+    const mesActual=`${S.anio}-${String(S.mes).padStart(2,'0')}`;
+    const vigentes=e.sueldoHistory
+      .filter(h=>h.desde<=mesActual)
+      .sort((a,b)=>b.desde.localeCompare(a.desde));
+    if(vigentes.length) return vigentes[0].monto;
+  }
+  return e.sueldo||0;
+}
+
+function getNomina(){
+  return S.empleados
+    .filter(e=>!['Dio','Santi'].includes(e.nombre) && empleadoActivoEnMes(e))
+    .reduce((s,e)=>s+getSueldoEnMes(e),0);
+}
 function getGastosFijos(){return S.gastos.reduce((s,g)=>{if(g.frecuencia==='mensual')return s+g.monto;if(g.frecuencia==='anual')return s+g.monto/12;return s;},0);}
 // One-shots: solo páginas web, branding y presentaciones
 const ONE_SHOT_TIPOS=['Página web','Branding','Presentación','Web','Landing','Ecommerce'];
@@ -1286,7 +1315,8 @@ function renderDashEquipo(dioAmt=0,santiAmt=0){
   const last=new Date(S.anio,S.mes+1,0).getDate();
   if(!S.skips)S.skips=[];
 
-  const empleados=S.empleados.filter(e=>!['Dio','Santi'].includes(e.nombre));
+  // Solo mostrar empleados que trabajaban en este mes
+  const empleados=S.empleados.filter(e=>!['Dio','Santi'].includes(e.nombre)&&empleadoActivoEnMes(e));
   const socios=S.empleados.filter(e=>['Dio','Santi'].includes(e.nombre));
 
   const rowEmp=(e,esSocio,montoSocio)=>{
@@ -1294,10 +1324,10 @@ function renderDashEquipo(dioAmt=0,santiAmt=0){
     const p=isPagadoE(e.id);
     const activo=e.estado==='activo';
     const skipKey=`skip-${e.id}-${S.mes}-${S.anio}`;
-    const skipped=S.skips.includes(skipKey);
+    const skipped=(S.skips||[]).includes(skipKey);
     const cNames=(e.clienteIds||[]).map(cid=>{const c=getQ(cid);return c?c.nombre:'?';}).join(', ')||'—';
-    const monto=esSocio?montoSocio:e.sueldo;
-    const esActivo=activo&&!skipped;
+    const monto=esSocio?montoSocio:getSueldoEnMes(e);
+    const esActivo=(activo||!!e.finLaboral)&&!skipped;
 
     // Estado+pago: single toggle button
     let estadoBtn='';
@@ -1718,21 +1748,23 @@ function saveRol(id){
 
 // ─── RENDER EQUIPO ───────────────────────────────────────────────────────────
 function renderEquipo(){
-  const activos=S.empleados.filter(e=>e.estado==='activo');
-  const total=activos.reduce((s,e)=>s+(e.sueldo||0),0);
+  const activos=S.empleados.filter(e=>e.estado==='activo'&&!['Dio','Santi'].includes(e.nombre));
+  const total=activos.reduce((s,e)=>s+getSueldoEnMes(e),0);
   const setV=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
   setV('eq-nomina',fmt(total));setV('eq-count',S.empleados.length);setV('eq-anual',fmt(total*12));
   const tb=document.getElementById('tbody-equipo');if(!tb)return;
   if(!S.empleados.length){tb.innerHTML='<tr><td colspan="7"><div class="empty">Sin equipo.</div></td></tr>';return;}
   const esSocio=e=>['Dio','Santi'].includes(e.nombre);
+  const exEmpleada=e=>!!e.finLaboral;
+
   tb.innerHTML=S.empleados.map(e=>{
     const activo=e.estado==='activo';
+    const esEx=exEmpleada(e);
     const cNames=(e.clienteIds||[]).map(cid=>{const c=getQ(cid);return c?`<span class="badge b-bl" style="margin-right:3px">${c.nombre}</span>`:''}).join('')||'<span style="color:var(--text3)">Sin asignar</span>';
     const dedOpts=['full','part','freelance'].map(v=>`<option value="${v}" ${(e.dedicacion||'full')===v?'selected':''}>${v==='full'?'Full time':v==='part'?'Part time':'Freelance'}</option>`).join('');
     const dedColor=e.dedicacion==='part'?'b-y':e.dedicacion==='freelance'?'b-p':'b-g';
     const dedLabel=e.dedicacion==='part'?'Part time':e.dedicacion==='freelance'?'Freelance':'Full time';
 
-    // Socios: no editable inline
     const rolCell=esSocio(e)
       ? `<div style="font-weight:600">${e.rol||'—'} <span class="badge ${dedColor}" style="font-size:9px">${dedLabel}</span></div>`
       : `<div style="display:flex;flex-direction:column;gap:5px">
@@ -1740,7 +1772,6 @@ function renderEquipo(){
           <select id="ded-${e.id}" onchange="saveRol(${e.id})" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text);font-family:Montserrat,sans-serif;font-size:11px;outline:none;width:130px">${dedOpts}</select>
         </div>`;
 
-    // Sueldo: editable para no-socios
     const sueldoCell=esSocio(e)
       ? `<strong style="color:var(--text2)">—</strong>`
       : `<div style="display:flex;align-items:center;gap:4px">
@@ -1748,20 +1779,60 @@ function renderEquipo(){
           <input id="sueldo-${e.id}" type="number" value="${e.sueldo||0}" onblur="saveSueldo(${e.id})" onkeydown="if(event.key==='Enter')this.blur()" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-family:Montserrat,sans-serif;font-size:12px;font-weight:700;outline:none;width:110px">
         </div>`;
 
-    return`<tr style="${activo?'':'opacity:.6'}">
-      <td><div class="erow"><div class="av" style="background:${e.color};color:#fff">${ini(e.nombre)}</div>
-        <div><div style="font-weight:700">${e.nombre}</div><div style="font-size:10px;color:var(--text2)">${e.email||''}</div></div></div></td>
+    // Fechas laborales editables
+    const fechasCell=esSocio(e)?'—':`<div style="display:flex;flex-direction:column;gap:4px">
+      <div style="display:flex;align-items:center;gap:5px">
+        <span style="font-size:9px;color:var(--text3);width:30px">Desde</span>
+        <input type="month" value="${e.inicioLaboral||''}" onchange="saveInicioEmp(${e.id},this.value)" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:3px 7px;color:var(--text);font-family:Montserrat,sans-serif;font-size:11px;outline:none">
+      </div>
+      <div style="display:flex;align-items:center;gap:5px">
+        <span style="font-size:9px;color:var(--text3);width:30px">Hasta</span>
+        <input type="month" value="${e.finLaboral||''}" onchange="saveFinEmp(${e.id},this.value)" placeholder="(activa)" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:3px 7px;color:${esEx?'var(--red)':'var(--text)'};font-family:Montserrat,sans-serif;font-size:11px;outline:none">
+      </div>
+    </div>`;
+
+    const estadoBadge=esSocio(e)
+      ? `<span class="badge b-bl">Socio</span>`
+      : esEx
+        ? `<span class="badge b-r">Ex · hasta ${fmtMes(e.finLaboral)}</span>`
+        : `<span class="badge b-g">Activa</span>`;
+
+    return`<tr style="${(activo||esEx)?'':'opacity:.5'}">
+      <td><div class="erow"><div class="av" style="background:${e.color||'#555'};color:#fff;opacity:${esEx?.6:1}">${ini(e.nombre)}</div>
+        <div><div style="font-weight:700;color:${esEx?'var(--text2)':'var(--text)'}">${e.nombre}</div><div style="font-size:10px;color:var(--text2)">${e.rol||''}</div></div></div></td>
       <td>${rolCell}</td>
       <td>${cNames}</td>
       <td>${sueldoCell}</td>
-      <td>Día ${e.dia}</td>
-      <td><span class="badge ${activo?'b-g':'b-gr'}">${e.estado}</span></td>
+      <td>${fechasCell}</td>
+      <td>${estadoBadge}</td>
       <td style="display:flex;gap:6px">
-        <button class="btn ${activo?'bg':'bs'} bsm" onclick="toggleEstadoEmp(${e.id})">${activo?'Pausar':'Activar'}</button>
+        ${!esSocio(e)&&!esEx?`<button class="btn bg bsm" onclick="marcarSalida(${e.id})">Dar de baja</button>`:''}
+        ${esEx?`<button class="btn bs bsm" onclick="reactivarEmp(${e.id})">Reactivar</button>`:''}
         <button class="btn bd bsm" onclick="delEmpleado(${e.id})">✕</button>
       </td>
     </tr>`;
   }).join('');
+}
+
+function saveInicioEmp(id,val){
+  const e=S.empleados.find(x=>x.id===id);if(!e)return;
+  e.inicioLaboral=val||null;save();renderEquipo();renderDash();renderProyeccion();
+}
+function saveFinEmp(id,val){
+  const e=S.empleados.find(x=>x.id===id);if(!e)return;
+  e.finLaboral=val||null;save();renderEquipo();renderDash();renderProyeccion();
+}
+function marcarSalida(id){
+  const e=S.empleados.find(x=>x.id===id);if(!e)return;
+  const mes=prompt(`¿En qué mes fue la última vez que trabajó ${e.nombre}? (YYYY-MM, ej: 2026-02)`);
+  if(!mes)return;
+  e.finLaboral=mes;e.estado='inactivo';
+  save();renderEquipo();renderDash();renderProyeccion();
+}
+function reactivarEmp(id){
+  const e=S.empleados.find(x=>x.id===id);if(!e)return;
+  e.finLaboral=null;e.estado='activo';
+  save();renderEquipo();renderDash();
 }
 
 function saveSueldo(id){
@@ -2084,20 +2155,22 @@ function initSeed(){
   if(S.clientes&&S.clientes.length)return;
 
   S.clientes=[
-    {id:101,nombre:'Mipileta', tipo:'rrss',     servicios:'Community management, contenido, reels',retainer:1700000,moneda:'ARS',contacto:'',estado:'activo',empleadoIds:[204,205],presupuesto:null,inicioServicio:'2025-09'},
-    {id:102,nombre:'Modulo',   tipo:'rrss',     servicios:'Community management, contenido mensual',retainer:420000,moneda:'ARS',contacto:'',estado:'activo',empleadoIds:[203],presupuesto:null,inicioServicio:'2025-09'},
-    {id:103,nombre:'Coarmi',   tipo:'pauta',    servicios:'Gestión de pauta Meta + Google',retainer:250000,moneda:'ARS',contacto:'',estado:'activo',empleadoIds:[203],presupuesto:null,inicioServicio:'2025-09'},
-    {id:104,nombre:'Antquera', tipo:'rrss',     servicios:'Community management, contenido, reels',retainer:1350000,moneda:'ARS',contacto:'',estado:'activo',empleadoIds:[205],presupuesto:null,inicioServicio:'2025-09'},
-    {id:105,nombre:'Froz',     tipo:'rrss',     servicios:'Redes sociales completas',retainer:800000,moneda:'ARS',contacto:'',estado:'activo',empleadoIds:[],presupuesto:null,inicioServicio:'2026-03'},
+    {id:101,nombre:'Mipileta', tipo:'rrss',     servicios:'Community management, contenido, reels',retainer:1700000,moneda:'ARS',contacto:'',estado:'activo',empleadoIds:[204,205],presupuesto:null,inicioServicio:'2025-09',retainerHistory:[{monto:1700000,desde:'2025-09',nota:'Inicial'}]},
+    {id:102,nombre:'Modulo',   tipo:'rrss',     servicios:'Community management, contenido mensual',retainer:420000,moneda:'ARS',contacto:'',estado:'activo',empleadoIds:[203],presupuesto:null,inicioServicio:'2025-09',retainerHistory:[{monto:420000,desde:'2025-09',nota:'Inicial'}]},
+    {id:103,nombre:'Coarmi',   tipo:'pauta',    servicios:'Gestión de pauta Meta + Google',retainer:250000,moneda:'ARS',contacto:'',estado:'activo',empleadoIds:[203],presupuesto:null,inicioServicio:'2025-09',retainerHistory:[{monto:250000,desde:'2025-09',nota:'Inicial'}]},
+    {id:104,nombre:'Antquera', tipo:'rrss',     servicios:'Community management, contenido, reels',retainer:1350000,moneda:'ARS',contacto:'',estado:'activo',empleadoIds:[205],presupuesto:null,inicioServicio:'2025-09',retainerHistory:[{monto:1750000,desde:'2025-09',nota:'Inicial'},{monto:1350000,desde:'2026-03',nota:'Ajuste marzo 2026'}]},
+    {id:105,nombre:'Froz',     tipo:'rrss',     servicios:'Redes sociales completas',retainer:800000,moneda:'ARS',contacto:'',estado:'activo',empleadoIds:[],presupuesto:null,inicioServicio:'2026-03',retainerHistory:[{monto:800000,desde:'2026-03',nota:'Inicial'}]},
   ];
 
   S.empleados=[
-    {id:201,nombre:'Dio',        rol:'Socio — 40%',           sueldo:0,     moneda:'ARS',dia:5, dedicacion:'full',     estado:'activo',email:'',color:'#1A73E8',clienteIds:[]},
-    {id:202,nombre:'Santi',      rol:'Socio — 40%',           sueldo:0,     moneda:'ARS',dia:5, dedicacion:'full',     estado:'activo',email:'',color:'#4d96ff',clienteIds:[]},
-    {id:203,nombre:'Belen',      rol:'Community Manager',     sueldo:150000,moneda:'ARS',dia:1, dedicacion:'part',     estado:'activo',email:'',color:'#9b6fe8',clienteIds:[102,103]},
-    {id:204,nombre:'Luisina',    rol:'Community Manager',     sueldo:550000,moneda:'ARS',dia:1, dedicacion:'part',     estado:'activo',email:'',color:'#2dca72',clienteIds:[101]},
-    {id:205,nombre:'Ori',        rol:'Community Manager',     sueldo:500000,moneda:'ARS',dia:1, dedicacion:'freelance',estado:'activo',email:'',color:'#e8b84a',clienteIds:[101,104]},
-    {id:206,nombre:'Luli Pagani',rol:'Diseñadora',            sueldo:600000,moneda:'ARS',dia:1, dedicacion:'freelance',estado:'activo',email:'',color:'#2dcab4',clienteIds:[]},
+    {id:201,nombre:'Dio',        rol:'Socio — 40%',           sueldo:0,     moneda:'ARS',dia:5, dedicacion:'full',     estado:'activo', email:'',color:'#1A73E8',clienteIds:[]},
+    {id:202,nombre:'Santi',      rol:'Socio — 40%',           sueldo:0,     moneda:'ARS',dia:5, dedicacion:'full',     estado:'activo', email:'',color:'#4d96ff',clienteIds:[]},
+    {id:203,nombre:'Belen',      rol:'Community Manager',     sueldo:150000,moneda:'ARS',dia:1, dedicacion:'part',     estado:'activo', email:'',color:'#9b6fe8',clienteIds:[102,103],inicioLaboral:'2025-09'},
+    {id:204,nombre:'Luisina',    rol:'Community Manager',     sueldo:550000,moneda:'ARS',dia:1, dedicacion:'part',     estado:'activo', email:'',color:'#2dca72',clienteIds:[101],inicioLaboral:'2025-09'},
+    {id:205,nombre:'Ori',        rol:'Community Manager',     sueldo:500000,moneda:'ARS',dia:1, dedicacion:'freelance',estado:'activo', email:'',color:'#e8b84a',clienteIds:[101,104],inicioLaboral:'2025-09'},
+    {id:206,nombre:'Luli Pagani',rol:'Diseñadora',            sueldo:600000,moneda:'ARS',dia:1, dedicacion:'freelance',estado:'activo', email:'',color:'#2dcab4',clienteIds:[],inicioLaboral:'2025-09'},
+    {id:207,nombre:'Mile',       rol:'Community Manager',     sueldo:250000,moneda:'ARS',dia:1, dedicacion:'part',     estado:'inactivo',email:'',color:'#e8704a',clienteIds:[104],inicioLaboral:'2025-09',finLaboral:'2026-02'},
+    {id:208,nombre:'Martu',      rol:'Community Manager',     sueldo:400000,moneda:'ARS',dia:1, dedicacion:'part',     estado:'inactivo',email:'',color:'#a0a0b0',clienteIds:[101],inicioLaboral:'2025-09',finLaboral:'2026-02'},
   ];
   // Sueldo Ori: 280k (Mipileta) + 220k (Antquera) = 500k
   // Actualizar clienteIds en clientes también
