@@ -538,12 +538,12 @@ tr:hover td{background:rgba(26,115,232,.03)}
 
     <!-- ── HISTORIA ANM ── -->
     <div style="margin-bottom:22px">
-      <div style="font-size:9px;color:var(--text3);letter-spacing:2.5px;text-transform:uppercase;font-weight:700;margin-bottom:12px">ANM Content Studio · <span id="pr-hist-sub">Historial desde el inicio</span></div>
+      <div style="font-size:9px;color:var(--text3);letter-spacing:2.5px;text-transform:uppercase;font-weight:700;margin-bottom:12px">ANM Content Studio · <span id="pr-hist-sub">Desde Oct 2025</span></div>
       <div class="crow c4" style="margin-bottom:14px">
         <div class="card ct ct-g">
           <div class="clabel">Facturado Total (histórico)</div>
           <div class="cval col-g" id="pr-hist-total">$0</div>
-          <div class="csub">Retainers + proyectos desde el inicio</div>
+          <div class="csub">Retainers + proyectos desde Oct 2025</div>
         </div>
         <div class="card ct ct-r">
           <div class="clabel">Costos Totales (histórico)</div>
@@ -653,8 +653,7 @@ tr:hover td{background:rgba(26,115,232,.03)}
       <div class="ca" style="margin-bottom:0"><div class="catitle">Recurrentes vs Puntuales</div><canvas id="ch-tipos" height="220"></canvas></div>
       <div class="ca" style="margin-bottom:0"><div class="catitle">Costos del Mes por Persona</div><canvas id="ch-costos" height="220"></canvas></div>
     </div>
-    <div class="ca"><div class="catitle">Proyección 12 meses — Ingresos vs Neto</div><canvas id="ch-proyeccion" height="110"></canvas></div>
-    <div class="ca"><div class="catitle">Evolución Histórica de Ingresos por Mes</div><canvas id="ch-historico" height="110"></canvas></div>
+
   </div>
 </div>
 
@@ -2170,7 +2169,7 @@ function renderProyeccion(){
 
   // Subtítulo con cantidad de meses
   const histSubEl=document.getElementById('pr-hist-sub');
-  if(histSubEl)histSubEl.textContent=`Historial desde el inicio (${histMeses} meses)`;
+  if(histSubEl)histSubEl.textContent=`Desde Oct 2025 · ${histMeses} meses`;
   const histMesesLabel=document.getElementById('pr-hist-meses-label');
   if(histMesesLabel)histMesesLabel.textContent=histMeses;
 
@@ -2424,60 +2423,8 @@ function renderProyeccion(){
     </div>`).join('');
   }
   renderDashCharts();
-  // Chart proyección 12m — expected (MRR) vs real (cobrado por mes)
-  const ctx1=document.getElementById('ch-proyeccion');if(!ctx1)return;
-  destroyChart('proy');
-  const labels=[],dEsp=[],dReal=[],dNeto=[];
-  for(let i=0;i<12;i++){
-    const mi=(S.mes+i)%12;
-    const yi=S.mes+i>=12?S.anio+1:S.anio;
-    labels.push(MONTHS[mi].substring(0,3));
-    dEsp.push(mrr);
-    dNeto.push(neto);
-    // Real: sum cobros de ese mes-año
-    const realMes=S.clientes.filter(c=>{
-      const k=`c-${c.id}-${mi}-${yi}`;
-      return S.cobros.some(x=>x.key===k);
-    }).reduce((s,c)=>s+retainer(c),0);
-    dReal.push(realMes>0?realMes:null);
-  }
-  charts.proy=new Chart(ctx1.getContext('2d'),{
-    type:'line',
-    data:{labels,datasets:[
-      {label:'Facturación Esperada',data:dEsp,borderColor:'rgba(26,115,232,.5)',borderDash:[6,3],backgroundColor:'rgba(26,115,232,.04)',tension:.3,fill:true,pointRadius:3,borderWidth:2,pointBackgroundColor:'rgba(26,115,232,.5)'},
-      {label:'Facturación Real (cobrado)',data:dReal,borderColor:'#1A73E8',backgroundColor:'rgba(26,115,232,.12)',tension:.3,fill:true,pointRadius:4,borderWidth:2.5,pointBackgroundColor:'#1A73E8',spanGaps:false},
-      {label:'Ganancia Neta (est.)',data:dNeto,borderColor:'#2dca72',backgroundColor:'rgba(45,202,114,.07)',tension:.3,fill:true,pointRadius:3,borderWidth:2,pointBackgroundColor:'#2dca72'},
-    ]},
-    options:{responsive:true,interaction:{mode:'index',intersect:false},
-      scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#7a7a8c',font:{family:'Montserrat',size:10}}},
-        y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#7a7a8c',font:{family:'Montserrat',size:10},callback:v=>'$'+Number(v/1000).toFixed(0)+'k'}}},
-      plugins:{legend:{labels:{color:'#7a7a8c',font:{family:'Montserrat',size:11},usePointStyle:true,padding:16}}}}
-  });
 
-  // Historico por mes
-  const ctx2=document.getElementById('ch-historico');if(!ctx2)return;
-  destroyChart('hist');
-  // Agrupar proyectos por mes
-  const mesesHist={};
-  S.proyectos.forEach(p=>{
-    if(!p.fecha)return;
-    const d=new Date(p.fecha+'T12:00');
-    const k=`${d.getFullYear()}-${String(d.getMonth()).padStart(2,'0')}`;
-    mesesHist[k]=(mesesHist[k]||0)+p.monto;
-  });
-  const keys=Object.keys(mesesHist).sort().slice(-8);
-  const histLabels=keys.map(k=>{const[y,m]=k.split('-');return MONTHS[parseInt(m)].substring(0,3)+' '+y.slice(2);});
-  const histDataChart=keys.map(k=>mesesHist[k]||0);
-  if(keys.length>0){
-    charts.hist=new Chart(ctx2.getContext('2d'),{
-      type:'bar',
-      data:{labels:histLabels,datasets:[{label:'Ingresos mensuales',data:histDataChart,backgroundColor:'rgba(26,115,232,.7)',borderRadius:8,borderSkipped:false,hoverBackgroundColor:'#1A73E8'}]},
-      options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+fmt(ctx.raw)}}},
-        scales:{x:{grid:{display:false},ticks:{color:'#7a7a8c',font:{family:'Montserrat',size:10}}},
-          y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#7a7a8c',font:{family:'Montserrat',size:10},callback:v=>'$'+Number(v/1000).toFixed(0)+'k'}}}}
-    });
-  }
-}
+} // end renderProyeccion
 
 // ─── RENDER CONFIG ───────────────────────────────────────────────────────────
 function renderConfig(){
