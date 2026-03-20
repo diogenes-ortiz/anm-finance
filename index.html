@@ -538,20 +538,20 @@ tr:hover td{background:rgba(26,115,232,.03)}
 
     <!-- ── HISTORIA ANM ── -->
     <div style="margin-bottom:22px">
-      <div style="font-size:9px;color:var(--text3);letter-spacing:2.5px;text-transform:uppercase;font-weight:700;margin-bottom:12px">ANM Content Studio · Historial desde el inicio (4 meses)</div>
+      <div style="font-size:9px;color:var(--text3);letter-spacing:2.5px;text-transform:uppercase;font-weight:700;margin-bottom:12px">ANM Content Studio · <span id="pr-hist-sub">Historial desde el inicio</span></div>
       <div class="crow c4" style="margin-bottom:14px">
         <div class="card ct ct-g">
           <div class="clabel">Facturado Total (histórico)</div>
           <div class="cval col-g" id="pr-hist-total">$0</div>
-          <div class="csub">Suma de todos los proyectos</div>
+          <div class="csub">Retainers + proyectos desde el inicio</div>
         </div>
         <div class="card ct ct-r">
-          <div class="clabel">Pagado a Equipo (histórico)</div>
+          <div class="clabel">Costos Totales (histórico)</div>
           <div class="cval col-r" id="pr-hist-costos">$0</div>
-          <div class="csub">Colaboradoras + gastos</div>
+          <div class="csub">Sueldos + gastos fijos acumulados</div>
         </div>
         <div class="card ct ct-bl">
-          <div class="clabel">Neto Acumulado (4 meses)</div>
+          <div class="clabel">Neto Acumulado (<span id="pr-hist-meses-label">—</span> meses)</div>
           <div class="cval col-b" id="pr-hist-neto">$0</div>
           <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">
             <div style="background:rgba(26,115,232,.1);border:1px solid rgba(26,115,232,.25);border-radius:6px;padding:3px 9px;font-size:10px;font-weight:700;color:var(--blue-l)">Dio <span id="pr-hist-dio">$0</span></div>
@@ -596,7 +596,7 @@ tr:hover td{background:rgba(26,115,232,.03)}
     <!-- Metas -->
     <div class="card" style="margin-bottom:16px;padding:16px 20px">
       <div class="clabel" style="margin-bottom:12px;font-size:10px;letter-spacing:2px">🎯 OBJETIVOS ANUALES</div>
-      <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:center">
+      <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:center;margin-bottom:14px">
         <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:160px">
           <label style="font-size:10px;color:var(--text2);font-weight:700;letter-spacing:1px">META FACTURACIÓN ANUAL</label>
           <div style="display:flex;align-items:center;gap:6px">
@@ -617,10 +617,12 @@ tr:hover td{background:rgba(26,115,232,.03)}
           <div style="font-size:22px;font-weight:900;color:var(--blue)" id="pr-clientes-actuales">0</div>
         </div>
         <div style="display:flex;flex-direction:column;gap:4px;align-items:center">
-          <div style="font-size:10px;color:var(--text2);font-weight:700;letter-spacing:1px">PROGRESO</div>
+          <div style="font-size:10px;color:var(--text2);font-weight:700;letter-spacing:1px">PROGRESO AÑO</div>
           <div style="font-size:22px;font-weight:900;color:var(--green)" id="pr-meta-pct">—</div>
         </div>
       </div>
+      <!-- Gráfico objetivos: real acumulado vs meta acumulada mes a mes -->
+      <canvas id="ch-objetivos" height="90"></canvas>
     </div>
 
     <!-- Proyección 12 meses -->
@@ -630,7 +632,6 @@ tr:hover td{background:rgba(26,115,232,.03)}
         <div style="font-size:10px;color:var(--text2)">Basado en retainers actuales + meta configurada</div>
       </div>
       <canvas id="ch-proyeccion-nueva" height="120"></canvas>
-      <div id="pr-obj-comparativa"></div>
     </div>
 
     <!-- Ganancias socios proyección -->
@@ -1052,7 +1053,7 @@ function fmtMes(ym){
 function retainer(c){
   // Si tiene historial, buscar el monto vigente para S.mes/S.anio
   if(c.retainerHistory&&c.retainerHistory.length){
-    const mesActual=`${S.anio}-${String(S.mes).padStart(2,'0')}`;
+    const mesActual=`${S.anio}-${String(S.mes+1).padStart(2,'0')}`;
     // Filtrar entradas que ya entraron en vigor, tomar la más reciente
     const vigentes=c.retainerHistory
       .filter(h=>h.desde<=mesActual)
@@ -1127,7 +1128,7 @@ function clienteVigenteEnMes(c){
   if(c.estado!=='activo')return false;
   // Chequear inicio de servicio
   if(c.inicioServicio){
-    const mesActual=`${S.anio}-${String(S.mes).padStart(2,'0')}`;
+    const mesActual=`${S.anio}-${String(S.mes+1).padStart(2,'0')}`;
     if(c.inicioServicio>mesActual)return false;
   }
   // Chequear pausa puntual del mes
@@ -1147,7 +1148,7 @@ function getMRR(){
 
 function getSueldoEnMes(e){
   if(e.sueldoHistory && e.sueldoHistory.length){
-    const mesActual=`${S.anio}-${String(S.mes).padStart(2,'0')}`;
+    const mesActual=`${S.anio}-${String(S.mes+1).padStart(2,'0')}`;
     const vigentes=e.sueldoHistory.filter(h=>h.desde<=mesActual).sort((a,b)=>b.desde.localeCompare(a.desde));
     if(vigentes.length) return vigentes[0].monto;
   }
@@ -1156,7 +1157,7 @@ function getSueldoEnMes(e){
 
 function empleadoActivoEnMes(e){
   if(['Dio','Santi'].includes(e.nombre)) return false;
-  const mesActual=`${S.anio}-${String(S.mes).padStart(2,'0')}`;
+  const mesActual=`${S.anio}-${String(S.mes+1).padStart(2,'0')}`;
   // Si está inactivo SIN finLaboral → nunca mostrar
   if(e.estado==='inactivo' && !e.finLaboral) return false;
   // Chequear inicio laboral
@@ -1708,7 +1709,7 @@ function renderCobros(){
   if(!S.extras)S.extras=[];
 
   // Solo mostrar activos Y no pausados en este mes
-  const todos=S.clientes.filter(c=>c.estado==='activo'&&(()=>{if(!c.inicioServicio)return true;const m=`${S.anio}-${String(S.mes).padStart(2,'0')}`;return c.inicioServicio<=m;})());
+  const todos=S.clientes.filter(c=>c.estado==='activo'&&(()=>{if(!c.inicioServicio)return true;const m=`${S.anio}-${String(S.mes+1).padStart(2,'0')}`;return c.inicioServicio<=m;})());
   const visibles=todos.filter(c=>!clientePausadoMes(c.id));
   const pausados=todos.filter(c=>clientePausadoMes(c.id));
 
@@ -2107,7 +2108,7 @@ function renderProyeccion(){
   // ── HISTORIAL ANM — mes por mes desde sep 2025 ───────────────────────────
   // S.mes es 0-indexed; mesStr usa 1-indexed (YYYY-MM)
   const mesesHistorial=[];
-  {let m=8,a=2025; // sep 2025
+  {let m=9,a=2025; // oct 2025
     while(a<S.anio||(a===S.anio&&m<=S.mes)){
       mesesHistorial.push({mes:m,anio:a});
       m++; if(m>11){m=0;a++;}
@@ -2117,24 +2118,31 @@ function renderProyeccion(){
   const histData=mesesHistorial.map(({mes,anio})=>{
     const mesStr=`${anio}-${String(mes+1).padStart(2,'0')}`; // 1-indexed
 
-    const retainersMes=S.clientes.reduce((s,c)=>{
-      if(c.estado!=='activo') return s;
-      if(c.inicioServicio && c.inicioServicio>mesStr) return s;
-      if(c.retainerHistory && c.retainerHistory.length){
-        const v=c.retainerHistory.filter(h=>h.desde<=mesStr).sort((a,b)=>b.desde.localeCompare(a.desde));
-        return s+(v.length?v[0].monto:0);
-      }
-      return s+(c.presupuesto??c.retainer??0);
-    },0);
+    // ── Usar exactamente la misma lógica que el dashboard ──
+    // Temporalmente cambiamos S.mes/S.anio para reutilizar clienteVigenteEnMes y retainer()
+    const savedMes=S.mes, savedAnio=S.anio;
+    S.mes=mes; S.anio=anio;
 
+    // Retainers: misma lógica que getMRR() en el dashboard
+    const retainersMes=S.clientes
+      .filter(c=>clienteVigenteEnMes(c))
+      .reduce((s,c)=>s+retainer(c),0);
+
+    // One-shots: solo proyectos puntuales (no RRSS mensuales), cobrados en ese mes
     const oneshots=S.proyectos.filter(p=>{
-      if(!p.fecha) return false;
+      if(!p.fecha||p.estado!=='cobrado') return false;
+      // Excluir proyectos que son retainers manuales (etapa contiene "Mensual")
+      if((p.etapa||'').toLowerCase().includes('mensual')) return false;
+      if((p.nombre||'').toLowerCase().includes('rrss')) return false;
       const d=new Date(p.fecha+'T12:00');
       return d.getFullYear()===anio && d.getMonth()===mes;
     }).reduce((s,p)=>s+p.monto,0);
 
+    S.mes=savedMes; S.anio=savedAnio;
+
     const ing=retainersMes+oneshots;
 
+    // Costos: misma lógica que getNomina()
     const costoEmp=S.empleados.reduce((s,e)=>{
       if(['Dio','Santi'].includes(e.nombre)) return s;
       if(e.inicioLaboral && e.inicioLaboral>mesStr) return s;
@@ -2163,6 +2171,8 @@ function renderProyeccion(){
   // Subtítulo con cantidad de meses
   const histSubEl=document.getElementById('pr-hist-sub');
   if(histSubEl)histSubEl.textContent=`Historial desde el inicio (${histMeses} meses)`;
+  const histMesesLabel=document.getElementById('pr-hist-meses-label');
+  if(histMesesLabel)histMesesLabel.textContent=histMeses;
 
   // ── METAS ──────────────────────────────────────────────────────────────────
   if(!S.metas)S.metas={facturacion:0,clientes:0};
@@ -2303,38 +2313,56 @@ function renderProyeccion(){
       }
     });
 
-    // ── Comparativa objetivos anuales ──
-    const facturadoAnioActual=histData
-      .filter(m=>m.anio===S.anio)
-      .reduce((s,m)=>s+m.ing,0);
-    const pctFacturado=metaAnual>0?Math.round((facturadoAnioActual/metaAnual)*100):null;
-
-    const objDiv=document.getElementById('pr-obj-comparativa');
-    if(objDiv){
-      objDiv.innerHTML=`
-        <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:center;padding:14px 20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-top:12px">
-          <div style="flex:1;min-width:140px">
-            <div style="font-size:9px;color:var(--text2);font-weight:700;letter-spacing:1.5px;margin-bottom:4px">FACTURADO ${S.anio}</div>
-            <div style="font-size:22px;font-weight:900;color:var(--green)">${fmt(facturadoAnioActual)}</div>
-          </div>
-          <div style="font-size:24px;color:var(--text3)">→</div>
-          <div style="flex:1;min-width:140px">
-            <div style="font-size:9px;color:var(--text2);font-weight:700;letter-spacing:1.5px;margin-bottom:4px">META ANUAL</div>
-            <div style="font-size:22px;font-weight:900;color:var(--yellow)">${metaAnual>0?fmt(metaAnual):'—'}</div>
-          </div>
-          ${pctFacturado!==null?`
-          <div style="flex-shrink:0">
-            <div style="font-size:9px;color:var(--text2);font-weight:700;letter-spacing:1.5px;margin-bottom:4px">PROGRESO</div>
-            <div style="font-size:22px;font-weight:900;color:${pctFacturado>=100?'var(--green)':pctFacturado>=60?'var(--yellow)':'var(--red)'}">${pctFacturado}%</div>
-          </div>
-          <!-- Barra de progreso -->
-          <div style="width:100%;background:var(--surface2);border-radius:99px;height:8px;overflow:hidden;margin-top:4px">
-            <div style="height:100%;width:${Math.min(pctFacturado,100)}%;background:${pctFacturado>=100?'var(--green)':pctFacturado>=60?'var(--yellow)':'var(--blue)'};border-radius:99px;transition:width .5s"></div>
-          </div>
-          `:''}
-        </div>`;
+    // ── Gráfico objetivos: real acumulado vs meta acumulada mes a mes ──
+    const ctxObj=document.getElementById('ch-objetivos');
+    destroyChart('objetivos');
+    if(ctxObj){
+      // Meses del año actual desde enero hasta diciembre
+      const labelsObj=[];
+      const dataRealAcum=[];   // acumulado real mes a mes
+      const dataMetaAcum=[];   // acumulado meta mes a mes (lineal)
+      const metaMensualObj=metaAnual>0?Math.round(metaAnual/12):null;
+      let acumReal=0;
+      for(let m=0;m<12;m++){
+        labelsObj.push(MONTHS[m].substring(0,3));
+        // Ingreso real de ese mes en el año actual (del histData)
+        const mesData=histData.find(h=>h.anio===S.anio&&h.mes===m);
+        if(mesData){
+          acumReal+=mesData.ing;
+          dataRealAcum.push(acumReal);
+        } else if(m<=S.mes){
+          dataRealAcum.push(acumReal); // mes actual sin datos → mantener
+        } else {
+          dataRealAcum.push(null); // meses futuros → no mostrar
+        }
+        if(metaMensualObj) dataMetaAcum.push(metaMensualObj*(m+1));
+      }
+      const dsObj=[
+        {label:'Facturación acumulada real',data:dataRealAcum,borderColor:'#2dca72',backgroundColor:'rgba(45,202,114,.1)',tension:.4,fill:true,pointRadius:3,pointBackgroundColor:'#2dca72',borderWidth:2.5,spanGaps:false},
+      ];
+      if(metaAnual>0){
+        dsObj.push({label:`Meta acumulada (${fmt(metaAnual)}/año)`,data:dataMetaAcum,borderColor:'rgba(232,184,74,.9)',backgroundColor:'transparent',borderDash:[6,4],tension:0,pointRadius:0,borderWidth:2,spanGaps:true});
+      }
+      charts.objetivos=new Chart(ctxObj.getContext('2d'),{
+        type:'line',
+        data:{labels:labelsObj,datasets:dsObj},
+        options:{responsive:true,interaction:{mode:'index',intersect:false},
+          scales:{
+            x:{grid:{display:false},ticks:{color:'#7a7a8c',font:{family:'Montserrat',size:10}}},
+            y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#7a7a8c',font:{family:'Montserrat',size:10},callback:v=>'$'+Number(v/1000000).toFixed(0)+'M'},beginAtZero:true}
+          },
+          plugins:{legend:{labels:{color:'#7a7a8c',font:{family:'Montserrat',size:11},usePointStyle:true,padding:14}},
+            tooltip:{callbacks:{label:ctx=>ctx.raw!=null?' '+fmt(ctx.raw):''}}}}
+      });
     }
-  }
+
+    // Progreso anual
+    const facturadoAnio=histData.filter(m=>m.anio===S.anio).reduce((s,m)=>s+m.ing,0);
+    const pctFacturado=metaAnual>0?Math.round((facturadoAnio/metaAnual)*100):null;
+    setV('pr-meta-pct',pctFacturado!==null?pctFacturado+'%':'—');
+    const pctEl=document.getElementById('pr-meta-pct');
+    if(pctEl&&pctFacturado!==null)pctEl.style.color=pctFacturado>=100?'var(--green)':pctFacturado>=60?'var(--yellow)':'var(--red)';
+  } // end if(ctxPN)
 
   // Fondo real (editable)
   const fondoUSD=S.fondoUSD||0;
