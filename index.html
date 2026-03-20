@@ -571,9 +571,15 @@ tr:hover td{background:rgba(26,115,232,.03)}
 
       <!-- Flujo mensual histórico -->
       <div class="ca" style="margin-bottom:0">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
           <div class="catitle" style="margin-bottom:0">Flujo mensual de ANM — Ingresos, Costos y Neto</div>
-          <div style="font-size:10px;color:var(--text2)">Basado en proyectos registrados</div>
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+            <span style="font-size:10px;color:var(--text2)">Mostrar</span>
+            <button onclick="setFlujoRange(3)" id="btn-flujo-3" class="btn bsm bg" style="font-size:10px;padding:4px 10px">3m</button>
+            <button onclick="setFlujoRange(6)" id="btn-flujo-6" class="btn bsm bp" style="font-size:10px;padding:4px 10px">6m</button>
+            <button onclick="setFlujoRange(12)" id="btn-flujo-12" class="btn bsm bg" style="font-size:10px;padding:4px 10px">12m</button>
+            <button onclick="setFlujoRange(999)" id="btn-flujo-all" class="btn bsm bg" style="font-size:10px;padding:4px 10px">Todo</button>
+          </div>
         </div>
         <canvas id="ch-flujo" height="130"></canvas>
       </div>
@@ -586,6 +592,47 @@ tr:hover td{background:rgba(26,115,232,.03)}
       <div class="card ct ct-bl"><div class="clabel">Neto Mensual (est.)</div><div class="cval col-b" id="pr-neto">$0</div><div class="csub" id="pr-neto-sub">—</div></div>
       <div class="card ct ct-y"><div class="clabel">Proyección 12 meses (neta)</div><div class="cval col-y" id="pr-anual">$0</div><div class="csub" id="pr-anual-sub">—</div></div>
     </div>
+
+    <!-- Metas -->
+    <div class="card" style="margin-bottom:16px;padding:16px 20px">
+      <div class="clabel" style="margin-bottom:12px;font-size:10px;letter-spacing:2px">🎯 OBJETIVOS ANUALES</div>
+      <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:center">
+        <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:160px">
+          <label style="font-size:10px;color:var(--text2);font-weight:700;letter-spacing:1px">META FACTURACIÓN ANUAL</label>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="color:var(--text2);font-weight:700">$</span>
+            <input id="meta-facturacion" type="number" placeholder="ej: 80000000" onchange="saveMetas()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-family:Montserrat,sans-serif;font-size:14px;font-weight:700;outline:none;width:160px">
+            <span style="font-size:10px;color:var(--text3)">ARS/año</span>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;min-width:120px">
+          <label style="font-size:10px;color:var(--text2);font-weight:700;letter-spacing:1px">META CLIENTES</label>
+          <div style="display:flex;align-items:center;gap:6px">
+            <input id="meta-clientes" type="number" placeholder="ej: 10" onchange="saveMetas()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-family:Montserrat,sans-serif;font-size:14px;font-weight:700;outline:none;width:80px">
+            <span style="font-size:10px;color:var(--text3)">clientes</span>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;align-items:center">
+          <div style="font-size:10px;color:var(--text2);font-weight:700;letter-spacing:1px">CLIENTES ACTUALES</div>
+          <div style="font-size:22px;font-weight:900;color:var(--blue)" id="pr-clientes-actuales">0</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;align-items:center">
+          <div style="font-size:10px;color:var(--text2);font-weight:700;letter-spacing:1px">PROGRESO</div>
+          <div style="font-size:22px;font-weight:900;color:var(--green)" id="pr-meta-pct">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Proyección 12 meses -->
+    <div class="ca" style="margin-bottom:18px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+        <div class="catitle" style="margin-bottom:0">Proyección 12 meses — Ingresos vs Meta</div>
+        <div style="font-size:10px;color:var(--text2)">Basado en retainers actuales + meta configurada</div>
+      </div>
+      <canvas id="ch-proyeccion-nueva" height="120"></canvas>
+      <div id="pr-obj-comparativa"></div>
+    </div>
+
     <!-- Ganancias socios proyección -->
     <div class="crow c2" style="margin-bottom:18px">
       <div class="card" style="display:flex;justify-content:space-between;align-items:center;padding:14px 20px">
@@ -599,7 +646,7 @@ tr:hover td{background:rgba(26,115,232,.03)}
       <div class="pc"><div class="pct">Proyección 6 meses</div><div id="pr-bars"></div></div>
       <div class="pc"><div class="pct">Resumen Anual</div><div id="pr-breakdown"></div></div>
     </div>
-    <!-- Gráficos movidos desde dashboard -->
+    <!-- Gráficos del mes -->
     <div class="chart3" style="margin-bottom:18px">
       <div class="ca" style="margin-bottom:0"><div class="catitle">Ingresos por Cliente (mes actual)</div><canvas id="ch-clientes" height="220"></canvas></div>
       <div class="ca" style="margin-bottom:0"><div class="catitle">Recurrentes vs Puntuales</div><canvas id="ch-tipos" height="220"></canvas></div>
@@ -2031,6 +2078,20 @@ function saveFondo(){
   S.fondoUSD=v;save();renderProyeccion();
 }
 
+function saveMetas(){
+  if(!S.metas)S.metas={};
+  const mf=document.getElementById('meta-facturacion');
+  const mc=document.getElementById('meta-clientes');
+  S.metas.facturacion=mf?parseFloat(mf.value)||0:S.metas.facturacion||0;
+  S.metas.clientes=mc?parseInt(mc.value)||0:S.metas.clientes||0;
+  save();renderProyeccion();
+}
+
+function setFlujoRange(n){
+  window._flujoRange=n;
+  renderProyeccion();
+}
+
 function renderProyeccion(){
   const mrr=getMRR(),nom=getNomina(),gf=getGastosFijos(),costos=nom+gf,neto=mrr-costos;
   const cotiz=S.cotizacion||1500;
@@ -2043,69 +2104,49 @@ function renderProyeccion(){
   setV('pr-santi-anual',fmt(Math.max(0,Math.round(neto*0.4*12))));
   setV('pr-agencia-anual',fmt(Math.max(0,Math.round(neto*0.2*12))));
 
-  // ── HISTORIAL ANM — calcular mes por mes desde el inicio ──────────────────
-  // Determinar rango: desde sep 2025 hasta mes actual
-  const mesInicio={anio:2025,mes:8}; // sep 2025 (mes=8 porque 0-indexed)
-  const mesFin={anio:S.anio,mes:S.mes};
+  // ── HISTORIAL ANM — mes por mes desde sep 2025 ───────────────────────────
+  // S.mes es 0-indexed; mesStr usa 1-indexed (YYYY-MM)
   const mesesHistorial=[];
-  let cursor={...mesInicio};
-  while(cursor.anio<mesFin.anio||(cursor.anio===mesFin.anio&&cursor.mes<=mesFin.mes)){
-    mesesHistorial.push({...cursor});
-    cursor.mes++;
-    if(cursor.mes>11){cursor.mes=0;cursor.anio++;}
+  {let m=8,a=2025; // sep 2025
+    while(a<S.anio||(a===S.anio&&m<=S.mes)){
+      mesesHistorial.push({mes:m,anio:a});
+      m++; if(m>11){m=0;a++;}
+    }
   }
 
-  // Para cada mes: calcular ingresos reales (retainers vigentes + one-shots cobrados) y costos reales
   const histData=mesesHistorial.map(({mes,anio})=>{
-    const mesStr=`${anio}-${String(mes).padStart(2,'0')}`;
+    const mesStr=`${anio}-${String(mes+1).padStart(2,'0')}`; // 1-indexed
 
-    // Ingresos: retainers de clientes vigentes ese mes
-    const retainersMes=S.clientes
-      .filter(c=>{
-        if(c.estado!=='activo')return false;
-        if(c.inicioServicio&&c.inicioServicio>mesStr)return false;
-        return true;
-      })
-      .reduce((s,c)=>{
-        // Buscar retainer vigente para ese mes
-        if(c.retainerHistory&&c.retainerHistory.length){
-          const vigentes=c.retainerHistory
-            .filter(h=>h.desde<=mesStr)
-            .sort((a,b)=>b.desde.localeCompare(a.desde));
-          return s+(vigentes.length?vigentes[0].monto:0);
-        }
-        return s+(c.presupuesto??c.retainer??0);
-      },0);
+    const retainersMes=S.clientes.reduce((s,c)=>{
+      if(c.estado!=='activo') return s;
+      if(c.inicioServicio && c.inicioServicio>mesStr) return s;
+      if(c.retainerHistory && c.retainerHistory.length){
+        const v=c.retainerHistory.filter(h=>h.desde<=mesStr).sort((a,b)=>b.desde.localeCompare(a.desde));
+        return s+(v.length?v[0].monto:0);
+      }
+      return s+(c.presupuesto??c.retainer??0);
+    },0);
 
-    // One-shots cobrados ese mes
-    const oneshots=S.proyectos
-      .filter(p=>{
-        if(!p.fecha||p.estado!=='cobrado')return false;
-        const d=new Date(p.fecha+'T12:00');
-        return d.getFullYear()===anio&&d.getMonth()===mes;
-      })
-      .reduce((s,p)=>s+p.monto,0);
+    const oneshots=S.proyectos.filter(p=>{
+      if(!p.fecha) return false;
+      const d=new Date(p.fecha+'T12:00');
+      return d.getFullYear()===anio && d.getMonth()===mes;
+    }).reduce((s,p)=>s+p.monto,0);
 
     const ing=retainersMes+oneshots;
 
-    // Costos: empleados activos ese mes
-    const costoEmp=S.empleados
-      .filter(e=>{
-        if(['Dio','Santi'].includes(e.nombre))return false;
-        if(e.inicioLaboral&&e.inicioLaboral>mesStr)return false;
-        if(e.finLaboral&&e.finLaboral<mesStr)return false;
-        if(e.estado==='inactivo'&&!e.finLaboral)return false;
-        const sk=`skip-${e.id}-${mes}-${anio}`;
-        if((S.skips||[]).includes(sk))return false;
-        return true;
-      })
-      .reduce((s,e)=>s+getSueldoEnMes(e),0);
+    const costoEmp=S.empleados.reduce((s,e)=>{
+      if(['Dio','Santi'].includes(e.nombre)) return s;
+      if(e.inicioLaboral && e.inicioLaboral>mesStr) return s;
+      if(e.finLaboral && e.finLaboral<mesStr) return s;
+      if(e.estado==='inactivo' && !e.finLaboral) return s;
+      const sk=`skip-${e.id}-${mes}-${anio}`;
+      if((S.skips||[]).includes(sk)) return s;
+      return s+getSueldoEnMes(e);
+    },0);
 
-    const costoFijo=getGastosFijos();
-    const costos=costoEmp+costoFijo;
-    const neto=ing-costos;
-
-    return{mes,anio,mesStr,ing,costos,neto,label:MONTHS[mes].substring(0,3)+' '+String(anio).slice(2)};
+    const costoTotal=costoEmp+getGastosFijos();
+    return{mes,anio,mesStr,ing,costos:costoTotal,neto:ing-costoTotal,label:MONTHS[mes].substring(0,3)+' '+String(anio).slice(2)};
   });
 
   const histTotalIng=histData.reduce((s,m)=>s+m.ing,0);
@@ -2123,6 +2164,178 @@ function renderProyeccion(){
   const histSubEl=document.getElementById('pr-hist-sub');
   if(histSubEl)histSubEl.textContent=`Historial desde el inicio (${histMeses} meses)`;
 
+  // ── METAS ──────────────────────────────────────────────────────────────────
+  if(!S.metas)S.metas={facturacion:0,clientes:0};
+  const metaFact=S.metas.facturacion||0;
+  const metaClientes=S.metas.clientes||0;
+  const clientesActuales=S.clientes.filter(c=>clienteVigenteEnMes(c)).length;
+  const mfEl=document.getElementById('meta-facturacion');
+  const mcEl=document.getElementById('meta-clientes');
+  if(mfEl&&document.activeElement!==mfEl)mfEl.value=metaFact||'';
+  if(mcEl&&document.activeElement!==mcEl)mcEl.value=metaClientes||'';
+  setV('pr-clientes-actuales',clientesActuales);
+  const pct=metaClientes>0?Math.round((clientesActuales/metaClientes)*100):null;
+  setV('pr-meta-pct',pct!==null?pct+'%':'—');
+  const pctEl=document.getElementById('pr-meta-pct');
+  if(pctEl)pctEl.style.color=pct>=100?'var(--green)':pct>=70?'var(--yellow)':'var(--red)';
+
+  // ── PROYECCIÓN 12 MESES ────────────────────────────────────────────────────
+  const ctxPN=document.getElementById('ch-proyeccion-nueva');
+  destroyChart('proyNueva');
+  if(ctxPN){
+    // ── Combinar: meses pasados reales + meses futuros proyectados ──
+    const hoy=`${S.anio}-${String(S.mes+1).padStart(2,'0')}`;
+    const allLabels=[], dataReal=[], dataProyectado=[], dataMeta=[];
+    const metaAnual=metaFact||0;
+    const metaMensual=metaAnual>0?Math.round(metaAnual/12):null;
+
+    // 6 meses pasados (histórico real)
+    for(let i=5;i>=1;i--){
+      let m=S.mes-i, a=S.anio;
+      if(m<0){m+=12;a--;}
+      const mesStr=`${a}-${String(m+1).padStart(2,'0')}`;
+      const ingReal=S.clientes.reduce((s,c)=>{
+        if(c.estado!=='activo') return s;
+        if(c.inicioServicio && c.inicioServicio>mesStr) return s;
+        if(c.retainerHistory && c.retainerHistory.length){
+          const v=c.retainerHistory.filter(h=>h.desde<=mesStr).sort((a2,b)=>b.desde.localeCompare(a2.desde));
+          return s+(v.length?v[0].monto:0);
+        }
+        return s+(c.presupuesto??c.retainer??0);
+      },0)
+      // Sumar one-shots de ese mes
+      +S.proyectos.filter(p=>{
+        if(!p.fecha) return false;
+        const d=new Date(p.fecha+'T12:00');
+        return d.getFullYear()===a && d.getMonth()===m;
+      }).reduce((s,p)=>s+p.monto,0);
+
+      allLabels.push(MONTHS[m].substring(0,3)+' '+String(a).slice(2));
+      dataReal.push(ingReal);
+      dataProyectado.push(null);
+      if(metaMensual) dataMeta.push(metaMensual);
+    }
+
+    // Mes actual — punto de transición (real)
+    {
+      const ingActual=getMRR();
+      allLabels.push(MONTHS[S.mes].substring(0,3)+' '+String(S.anio).slice(2)+' ◉');
+      dataReal.push(ingActual);
+      dataProyectado.push(ingActual); // conectar la línea
+      if(metaMensual) dataMeta.push(metaMensual);
+    }
+
+    // 11 meses futuros proyectados
+    for(let i=1;i<=11;i++){
+      const m=(S.mes+i)%12;
+      const a=S.anio+Math.floor((S.mes+i)/12);
+      const mesStr=`${a}-${String(m+1).padStart(2,'0')}`;
+      const ingFuturo=S.clientes.reduce((s,c)=>{
+        if(c.estado!=='activo') return s;
+        if(c.inicioServicio && c.inicioServicio>mesStr) return s;
+        if(c.retainerHistory && c.retainerHistory.length){
+          const v=c.retainerHistory.filter(h=>h.desde<=mesStr).sort((a2,b)=>b.desde.localeCompare(a2.desde));
+          return s+(v.length?v[0].monto:0);
+        }
+        return s+(c.presupuesto??c.retainer??0);
+      },0);
+      allLabels.push(MONTHS[m].substring(0,3)+' '+String(a).slice(2));
+      dataReal.push(null);
+      dataProyectado.push(ingFuturo);
+      if(metaMensual) dataMeta.push(metaMensual);
+    }
+
+    const datasets=[
+      {
+        label:'Facturación real',
+        data:dataReal,
+        borderColor:'#2dca72',
+        backgroundColor:'rgba(45,202,114,.12)',
+        tension:.4,fill:true,
+        pointRadius:4,pointBackgroundColor:'#2dca72',
+        borderWidth:2.5,
+        spanGaps:false,
+      },
+      {
+        label:'Proyección (retainers vigentes)',
+        data:dataProyectado,
+        borderColor:'#1A73E8',
+        backgroundColor:'rgba(26,115,232,.08)',
+        tension:.4,fill:true,
+        pointRadius:4,pointBackgroundColor:'#1A73E8',
+        borderWidth:2,
+        borderDash:[],
+        spanGaps:false,
+      },
+    ];
+    if(metaMensual){
+      datasets.push({
+        label:`Meta mensual ${fmt(metaMensual)} (anual ${fmt(metaAnual)})`,
+        data:dataMeta,
+        borderColor:'rgba(232,184,74,.9)',
+        backgroundColor:'transparent',
+        borderDash:[6,4],
+        tension:0,
+        pointRadius:0,
+        borderWidth:2,
+        spanGaps:true,
+      });
+    }
+
+    charts.proyNueva=new Chart(ctxPN.getContext('2d'),{
+      type:'line',
+      data:{labels:allLabels,datasets},
+      options:{
+        responsive:true,
+        interaction:{mode:'index',intersect:false},
+        scales:{
+          x:{grid:{display:false},ticks:{color:'#7a7a8c',font:{family:'Montserrat',size:10}}},
+          y:{
+            grid:{color:'rgba(255,255,255,.04)'},
+            ticks:{color:'#7a7a8c',font:{family:'Montserrat',size:10},callback:v=>'$'+Number(v/1000000).toFixed(1)+'M'},
+            beginAtZero:true,
+          }
+        },
+        plugins:{
+          legend:{labels:{color:'#7a7a8c',font:{family:'Montserrat',size:11},usePointStyle:true,padding:14}},
+          tooltip:{callbacks:{label:ctx=>ctx.raw!=null?' '+fmt(ctx.raw):''}}
+        }
+      }
+    });
+
+    // ── Comparativa objetivos anuales ──
+    const facturadoAnioActual=histData
+      .filter(m=>m.anio===S.anio)
+      .reduce((s,m)=>s+m.ing,0);
+    const pctFacturado=metaAnual>0?Math.round((facturadoAnioActual/metaAnual)*100):null;
+
+    const objDiv=document.getElementById('pr-obj-comparativa');
+    if(objDiv){
+      objDiv.innerHTML=`
+        <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:center;padding:14px 20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-top:12px">
+          <div style="flex:1;min-width:140px">
+            <div style="font-size:9px;color:var(--text2);font-weight:700;letter-spacing:1.5px;margin-bottom:4px">FACTURADO ${S.anio}</div>
+            <div style="font-size:22px;font-weight:900;color:var(--green)">${fmt(facturadoAnioActual)}</div>
+          </div>
+          <div style="font-size:24px;color:var(--text3)">→</div>
+          <div style="flex:1;min-width:140px">
+            <div style="font-size:9px;color:var(--text2);font-weight:700;letter-spacing:1.5px;margin-bottom:4px">META ANUAL</div>
+            <div style="font-size:22px;font-weight:900;color:var(--yellow)">${metaAnual>0?fmt(metaAnual):'—'}</div>
+          </div>
+          ${pctFacturado!==null?`
+          <div style="flex-shrink:0">
+            <div style="font-size:9px;color:var(--text2);font-weight:700;letter-spacing:1.5px;margin-bottom:4px">PROGRESO</div>
+            <div style="font-size:22px;font-weight:900;color:${pctFacturado>=100?'var(--green)':pctFacturado>=60?'var(--yellow)':'var(--red)'}">${pctFacturado}%</div>
+          </div>
+          <!-- Barra de progreso -->
+          <div style="width:100%;background:var(--surface2);border-radius:99px;height:8px;overflow:hidden;margin-top:4px">
+            <div style="height:100%;width:${Math.min(pctFacturado,100)}%;background:${pctFacturado>=100?'var(--green)':pctFacturado>=60?'var(--yellow)':'var(--blue)'};border-radius:99px;transition:width .5s"></div>
+          </div>
+          `:''}
+        </div>`;
+    }
+  }
+
   // Fondo real (editable)
   const fondoUSD=S.fondoUSD||0;
   const fondoARS=Math.round(fondoUSD*cotiz);
@@ -2136,10 +2349,21 @@ function renderProyeccion(){
   const ctxF=document.getElementById('ch-flujo');
   destroyChart('flujo');
   if(ctxF&&histData.length){
-    const flLabels=histData.map(m=>m.label);
-    const flIng=histData.map(m=>m.ing);
-    const flCost=histData.map(m=>m.costos);
-    const flNeto=histData.map(m=>m.neto);
+    // Aplicar filtro de rango (default 6 meses)
+    const range=window._flujoRange||6;
+    const dataSlice=histData.slice(-range);
+    // Actualizar botones activos
+    ['3','6','12','all'].forEach(r=>{
+      const btn=document.getElementById(`btn-flujo-${r}`);
+      if(!btn)return;
+      const active=(r==='all'?range>=999:parseInt(r)===range);
+      btn.className=`btn bsm ${active?'bp':'bg'}`;
+      btn.style.fontSize='10px';btn.style.padding='4px 10px';
+    });
+    const flLabels=dataSlice.map(m=>m.label);
+    const flIng=dataSlice.map(m=>m.ing);
+    const flCost=dataSlice.map(m=>m.costos);
+    const flNeto=dataSlice.map(m=>m.neto);
     charts.flujo=new Chart(ctxF.getContext('2d'),{
       type:'bar',
       data:{labels:flLabels,datasets:[
