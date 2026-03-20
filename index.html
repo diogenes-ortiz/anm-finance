@@ -2193,62 +2193,50 @@ function renderProyeccion(){
   const ctxPN=document.getElementById('ch-proyeccion-nueva');
   destroyChart('proyNueva');
   if(ctxPN){
-    // ── Combinar: meses pasados reales + meses futuros proyectados ──
-    const hoy=`${S.anio}-${String(S.mes+1).padStart(2,'0')}`;
     const allLabels=[], dataReal=[], dataProyectado=[], dataMeta=[];
     const metaAnual=metaFact||0;
     const metaMensual=metaAnual>0?Math.round(metaAnual/12):null;
+    const savedMes=S.mes, savedAnio=S.anio;
 
-    // 6 meses pasados (histórico real)
-    for(let i=5;i>=1;i--){
-      let m=S.mes-i, a=S.anio;
-      if(m<0){m+=12;a--;}
-      const mesStr=`${a}-${String(m+1).padStart(2,'0')}`;
-      const ingReal=S.clientes.reduce((s,c)=>{
-        if(c.estado!=='activo') return s;
-        if(c.inicioServicio && c.inicioServicio>mesStr) return s;
-        if(c.retainerHistory && c.retainerHistory.length){
-          const v=c.retainerHistory.filter(h=>h.desde<=mesStr).sort((a2,b)=>b.desde.localeCompare(a2.desde));
-          return s+(v.length?v[0].monto:0);
-        }
-        return s+(c.presupuesto??c.retainer??0);
-      },0)
-      // Sumar one-shots de ese mes
-      +S.proyectos.filter(p=>{
-        if(!p.fecha) return false;
+    // Helper: ingreso real de un mes usando la MISMA lógica que el dashboard
+    const getIngMes=(m,a)=>{
+      S.mes=m; S.anio=a;
+      const ret=S.clientes.filter(c=>clienteVigenteEnMes(c)).reduce((s,c)=>s+retainer(c),0);
+      // One-shots puntuales cobrados ese mes (no retainers manuales)
+      const os=S.proyectos.filter(p=>{
+        if(!p.fecha||p.estado!=='cobrado') return false;
+        if((p.etapa||'').toLowerCase().includes('mensual')) return false;
+        if((p.nombre||'').toLowerCase().includes('rrss')) return false;
         const d=new Date(p.fecha+'T12:00');
         return d.getFullYear()===a && d.getMonth()===m;
       }).reduce((s,p)=>s+p.monto,0);
+      S.mes=savedMes; S.anio=savedAnio;
+      return ret+os;
+    };
 
+    // 6 meses pasados — real
+    for(let i=5;i>=1;i--){
+      let m=savedMes-i, a=savedAnio;
+      if(m<0){m+=12;a--;}
       allLabels.push(MONTHS[m].substring(0,3)+' '+String(a).slice(2));
-      dataReal.push(ingReal);
+      dataReal.push(getIngMes(m,a));
       dataProyectado.push(null);
       if(metaMensual) dataMeta.push(metaMensual);
     }
 
-    // Mes actual — punto de transición (real)
-    {
-      const ingActual=getMRR();
-      allLabels.push(MONTHS[S.mes].substring(0,3)+' '+String(S.anio).slice(2)+' ◉');
-      dataReal.push(ingActual);
-      dataProyectado.push(ingActual); // conectar la línea
-      if(metaMensual) dataMeta.push(metaMensual);
-    }
+    // Mes actual — punto de transición
+    allLabels.push(MONTHS[savedMes].substring(0,3)+' '+String(savedAnio).slice(2)+' ◉');
+    dataReal.push(getMRR());
+    dataProyectado.push(getMRR());
+    if(metaMensual) dataMeta.push(metaMensual);
 
-    // 11 meses futuros proyectados
+    // 11 meses futuros — proyección con retainers vigentes en ese mes
     for(let i=1;i<=11;i++){
-      const m=(S.mes+i)%12;
-      const a=S.anio+Math.floor((S.mes+i)/12);
-      const mesStr=`${a}-${String(m+1).padStart(2,'0')}`;
-      const ingFuturo=S.clientes.reduce((s,c)=>{
-        if(c.estado!=='activo') return s;
-        if(c.inicioServicio && c.inicioServicio>mesStr) return s;
-        if(c.retainerHistory && c.retainerHistory.length){
-          const v=c.retainerHistory.filter(h=>h.desde<=mesStr).sort((a2,b)=>b.desde.localeCompare(a2.desde));
-          return s+(v.length?v[0].monto:0);
-        }
-        return s+(c.presupuesto??c.retainer??0);
-      },0);
+      const m=(savedMes+i)%12;
+      const a=savedAnio+Math.floor((savedMes+i)/12);
+      S.mes=m; S.anio=a;
+      const ingFuturo=S.clientes.filter(c=>clienteVigenteEnMes(c)).reduce((s,c)=>s+retainer(c),0);
+      S.mes=savedMes; S.anio=savedAnio;
       allLabels.push(MONTHS[m].substring(0,3)+' '+String(a).slice(2));
       dataReal.push(null);
       dataProyectado.push(ingFuturo);
