@@ -330,7 +330,6 @@ tr:hover td{background:rgba(26,115,232,.03)}
     <div class="ni" onclick="goTo('proyeccion',this)"><span class="ni-icon">◉</span>Proyección</div>
     <div class="ns">Ingresos</div>
     <div class="ni" onclick="goTo('cobros',this)"><span class="ni-icon">✓</span>Cobros del Mes</div>
-    <div class="ni" onclick="goTo('clientes',this)"><span class="ni-icon">◇</span>Clientes Mensuales</div>
     <div class="ni" onclick="goTo('proyectos',this)"><span class="ni-icon">◎</span>Proyectos Puntuales</div>
     <div class="ns">Equipo & Gastos</div>
     <div class="ni" onclick="goTo('equipo',this)"><span class="ni-icon">◑</span>Equipo</div>
@@ -444,34 +443,6 @@ tr:hover td{background:rgba(26,115,232,.03)}
 </div>
 
 <!-- ═══════════════ CLIENTES MENSUALES ═══════════════ -->
-<div id="page-clientes" class="page">
-  <div class="topbar">
-    <button class="menu-btn" onclick="toggleSidebar()"><span></span><span></span><span></span></button><div class="ptitle">Clientes Mensuales</div>
-    <button class="btn bp" onclick="openModal('m-cliente')">+ Nuevo Cliente</button>
-  </div>
-  <div class="content">
-
-    <!-- Tabs RRSS / Pauta -->
-    <div class="tabs">
-      <div class="tab active" onclick="setClienteTab('todos',this)">Todos</div>
-      <div class="tab" onclick="setClienteTab('rrss',this)">Redes Sociales</div>
-      <div class="tab" onclick="setClienteTab('pauta',this)">Pauta</div>
-      <div class="tab" onclick="setClienteTab('otros',this)">Otros</div>
-    </div>
-
-    <div class="tw">
-      <div class="th">
-        <div class="tt">Clientes con Contrato Mensual</div>
-        <div id="mrr-total" style="font-size:13px;font-weight:800;color:var(--green)"></div>
-      </div>
-      <table>
-        <thead><tr><th>Cliente</th><th>Tipo</th><th>Servicios</th><th>Equipo</th><th>Retainer/mes</th><th>Inicio</th><th>Estado</th><th></th></tr></thead>
-        <tbody id="tbody-clientes"></tbody>
-      </table>
-    </div>
-  </div>
-</div>
-
 <!-- ═══════════════ PROYECTOS PUNTUALES ═══════════════ -->
 <div id="page-proyectos" class="page">
   <div class="topbar">
@@ -659,7 +630,7 @@ tr:hover td{background:rgba(26,115,232,.03)}
 
 <!-- ═══════════════ CONFIGURACIÓN ═══════════════ -->
 <div id="page-config" class="page">
-  <div class="topbar"><button class="menu-btn" onclick="toggleSidebar()"><span></span><span></span><span></span></button><div class="ptitle">Configuración</div></div>
+  <div class="topbar"><button class="menu-btn" onclick="toggleSidebar()"><span></span><span></span><span></span></button><div class="ptitle">Configuración</div><button class="btn bp" onclick="openModal('m-cliente')">+ Nuevo Cliente</button></div>
   <div class="content">
     <div class="cfsect">
       <div class="cftitle">Presupuesto y Servicios por Cliente</div>
