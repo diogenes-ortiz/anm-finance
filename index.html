@@ -320,6 +320,9 @@ tr:hover td{background:rgba(26,115,232,.03)}
         <div class="logo-anm">ANM</div>
         <div class="logo-sub">Content Studio · Finance</div>
         <div id="sync-status" style="font-size:9px;margin-top:6px;font-weight:700;color:var(--text3);transition:color .3s">💾 Local</div>
+        <button onclick="guardarAhora()" style="margin-top:8px;width:100%;padding:6px 0;background:var(--blue);color:#fff;border:none;border-radius:7px;font-family:Montserrat,sans-serif;font-size:10px;font-weight:700;cursor:pointer;letter-spacing:.5px;transition:opacity .15s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+          ☁ Guardar ahora
+        </button>
       </div>
       <button class="hamburger-close" onclick="closeSidebar()">✕</button>
     </div>
@@ -945,6 +948,12 @@ const SB_HEADERS = { 'Content-Type': 'application/json', 'apikey': SB_KEY, 'Auth
 
 let saveTimeout = null;
 let syncStatus = 'local'; // 'local' | 'syncing' | 'synced' | 'error'
+
+function guardarAhora(){
+  clearTimeout(saveTimeout);
+  localStorage.setItem('anm_v6',JSON.stringify(S));
+  saveToSupabase();
+}
 
 function setSyncStatus(s){
   syncStatus=s;
