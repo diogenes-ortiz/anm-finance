@@ -1472,6 +1472,12 @@ function renderDashEquipo(dioAmt=0,santiAmt=0){
   const empNormales=S.empleados.filter(e=>!['Dio','Santi'].includes(e.nombre)&&empleadoActivoEnMes(e));
   const empExtrasKeys=S.extrasEquipo.filter(x=>x.tipo==='add'&&x.mes===S.mes&&x.anio===S.anio).map(x=>x.empId);
   const empExtras=S.empleados.filter(e=>empExtrasKeys.includes(e.id)&&!empNormales.find(n=>n.id===e.id));
+  // Incluir también inactivos skipped para mostrar fila de "no trabajó este mes"
+  const skippeados=S.empleados.filter(e=>{
+    if(['Dio','Santi'].includes(e.nombre)) return false;
+    const sk=`skip-${e.id}-${S.mes}-${S.anio}`;
+    return (S.skips||[]).includes(sk);
+  });
   const empleados=[...empNormales,...empExtras];
   const socios=S.empleados.filter(e=>['Dio','Santi'].includes(e.nombre));
 
@@ -1549,13 +1555,25 @@ function renderDashEquipo(dioAmt=0,santiAmt=0){
     </tr>`;
   };
 
-  // Total excluye los skipped
-  const totalNomina=empleados
-    .filter(e=>!(S.skips||[]).includes(`skip-${e.id}-${S.mes}-${S.anio}`))
-    .reduce((s,e)=>s+getSueldoEnMes(e),0);
+  // Total: solo empleados activos en la tabla (no skipped)
+  const totalNomina=empleados.reduce((s,e)=>s+getSueldoEnMes(e),0);
+
+  // Fila compacta para skippeados (fuera del mes)
+  const skipRow=skippeados.length
+    ? `<tr style="opacity:.45">
+        <td colspan="5" style="padding:6px 16px;font-size:11px;color:var(--text3)">
+          ${skippeados.map(e=>`<span style="margin-right:8px">✕ ${e.nombre}</span>`).join('')}
+          <span style="font-size:10px"> — no trabajaron este mes</span>
+        </td>
+        <td colspan="2" style="padding:6px 16px;text-align:right">
+          ${skippeados.map(e=>`<button onclick="toggleSkip(${e.id})" title="Reactivar" style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:6px;padding:3px 8px;font-size:10px;cursor:pointer;font-family:Montserrat,sans-serif;margin-left:4px">↩ ${e.nombre}</button>`).join('')}
+        </td>
+      </tr>`
+    : '';
 
   tb.innerHTML=
     empleados.map(e=>rowEmp(e,false,0)).join('')+
+    skipRow+
     `<tr>
       <td colspan="3" style="padding:10px 16px;background:var(--surface2);border-top:2px solid var(--border)">
         <div style="font-size:10px;color:var(--text2);font-weight:700;text-transform:uppercase;letter-spacing:1.5px">Total equipo este mes</div>
@@ -2673,11 +2691,13 @@ if(!S.clientesPausados)S.clientesPausados=[];
 if(!S.transferencias)S.transferencias=[];
 if(!S.extrasEquipo)S.extrasEquipo=[];
 
-// Parche: asegurar que Mile y Martu tengan finLaboral correcto aunque vengan de Supabase viejo
+// Parche: asegurar fechas laborales correctas
 if(S.empleados&&S.empleados.length){
   S.empleados.forEach(e=>{
     if(e.nombre==='Mile'&&!e.finLaboral){e.finLaboral='2026-02';e.inicioLaboral=e.inicioLaboral||'2026-01';e.estado='inactivo';}
     if(e.nombre==='Martu'&&!e.finLaboral){e.finLaboral='2026-02';e.inicioLaboral=e.inicioLaboral||'2025-09';e.estado='inactivo';}
+    if(e.nombre==='Luisina'&&(!e.inicioLaboral||e.inicioLaboral<'2026-03')){e.inicioLaboral='2026-03';}
+    if(e.nombre==='Luli Pagani'&&(!e.inicioLaboral||e.inicioLaboral<'2026-03')){e.inicioLaboral='2026-03';}
   });
 }
 
@@ -2700,14 +2720,16 @@ loadFromSupabase().then(loaded=>{
     if(!S.extras)S.extras=[];
     if(!S.clientesPausados)S.clientesPausados=[];
     if(!S.transferencias)S.transferencias=[];
-    // Parche: forzar finLaboral en Mile y Martu si Supabase los trajo sin él
+    // Parche: asegurar fechas laborales correctas desde Supabase
     if(S.empleados&&S.empleados.length){
       let parchado=false;
       S.empleados.forEach(e=>{
         if(e.nombre==='Mile'&&!e.finLaboral){e.finLaboral='2026-02';e.inicioLaboral=e.inicioLaboral||'2026-01';e.estado='inactivo';parchado=true;}
         if(e.nombre==='Martu'&&!e.finLaboral){e.finLaboral='2026-02';e.inicioLaboral=e.inicioLaboral||'2025-09';e.estado='inactivo';parchado=true;}
+        if(e.nombre==='Luisina'&&(!e.inicioLaboral||e.inicioLaboral<'2026-03')){e.inicioLaboral='2026-03';parchado=true;}
+        if(e.nombre==='Luli Pagani'&&(!e.inicioLaboral||e.inicioLaboral<'2026-03')){e.inicioLaboral='2026-03';parchado=true;}
       });
-      if(parchado)saveToSupabase(); // guardar el parche en Supabase para que no vuelva a pasar
+      if(parchado)saveToSupabase();
     }
     render();
   } else {
