@@ -739,6 +739,25 @@ tr:hover td{background:rgba(26,115,232,.03)}
   </div>
 </div>
 
+<!-- Modal Historial Sueldo -->
+<div class="mo" id="m-sueldo-hist">
+  <div class="modal" style="width:400px">
+    <div class="mtitle">Historial de sueldo — <span id="sh-nombre" style="color:var(--blue)"></span></div>
+    <input type="hidden" id="sh-emp-id">
+    <div id="sh-lista" style="margin-bottom:16px"></div>
+    <div class="cflabel" style="margin-bottom:8px">Agregar nuevo</div>
+    <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+      <input type="number" id="sh-monto" placeholder="Monto" style="flex:1;min-width:100px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-family:Montserrat,sans-serif;font-size:13px;font-weight:700;outline:none">
+      <input type="month" id="sh-desde" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-family:Montserrat,sans-serif;font-size:12px;outline:none">
+    </div>
+    <input id="sh-nota" placeholder="Nota (ej: aumento acordado, ajuste)" style="width:100%;margin-bottom:12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-family:Montserrat,sans-serif;font-size:12px;outline:none">
+    <div class="mact">
+      <button class="btn bg" onclick="closeModal('m-sueldo-hist')">Cerrar</button>
+      <button class="btn bp" onclick="guardarSueldoHistory()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 </main>
 
 <!-- Modal: Agregar empleado al mes -->
@@ -1983,33 +2002,13 @@ function renderEquipo(){
 
     const sueldoCell=esSocio(e)
       ? `<strong style="color:var(--text2)">—</strong>`
-      : `<div style="display:flex;flex-direction:column;gap:6px;min-width:160px">
-          <!-- Sueldo actual editable -->
+      : `<div style="display:flex;flex-direction:column;gap:5px;min-width:130px">
           <div style="display:flex;align-items:center;gap:4px">
             <span style="color:var(--text3);font-size:12px;font-weight:700">$</span>
             <input id="sueldo-${e.id}" type="number" value="${e.sueldo||0}" onblur="saveSueldo(${e.id})" onkeydown="if(event.key==='Enter')this.blur()" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-family:Montserrat,sans-serif;font-size:12px;font-weight:700;outline:none;width:110px">
+            <button onclick="toggleSueldoHist(${e.id})" title="Ver historial" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 7px;color:var(--text2);cursor:pointer;font-size:11px;font-family:Montserrat,sans-serif">📋</button>
           </div>
-          <!-- Historial de sueldos -->
-          ${(()=>{
-            const hist=[...(e.sueldoHistory||[])].sort((a,b)=>b.desde.localeCompare(a.desde));
-            const histHtml=hist.map(h=>`
-              <div style="display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid var(--border)">
-                <input type="month" value="${h.desde}" onchange="editSueldoDesde(${e.id},'${h.desde}',this.value)" style="background:none;border:none;color:var(--text3);font-family:Montserrat,sans-serif;font-size:10px;outline:none;width:110px;cursor:pointer">
-                <span style="font-size:11px;font-weight:700;color:var(--text2);flex-shrink:0">${fmt(h.monto)}</span>
-                <span style="font-size:9px;color:var(--text3);flex:1;font-style:italic;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${h.nota||''}</span>
-                ${hist.length>1?`<button onclick="borrarSueldoHistory(${e.id},'${h.desde}')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:11px;padding:0;flex-shrink:0">✕</button>`:''}
-              </div>`).join('');
-            return hist.length?`<div style="margin-top:2px">${histHtml}</div>`:'';
-          })()}
-          <!-- Agregar nuevo sueldo -->
-          <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:2px">
-            <input type="number" id="sh-monto-${e.id}" placeholder="Nuevo monto" style="flex:1;min-width:90px;background:var(--surface2);border:1px dashed var(--border);border-radius:6px;padding:4px 7px;color:var(--text);font-family:Montserrat,sans-serif;font-size:11px;outline:none">
-            <input type="month" id="sh-desde-${e.id}" style="background:var(--surface2);border:1px dashed var(--border);border-radius:6px;padding:4px 7px;color:var(--text);font-family:Montserrat,sans-serif;font-size:11px;outline:none;width:120px">
-          </div>
-          <div style="display:flex;gap:5px">
-            <input id="sh-nota-${e.id}" placeholder="Nota (ej: aumento)" style="flex:1;background:var(--surface2);border:1px dashed var(--border);border-radius:6px;padding:4px 7px;color:var(--text);font-family:Montserrat,sans-serif;font-size:11px;outline:none">
-            <button onclick="guardarSueldoHistory(${e.id})" style="background:var(--blue);color:#fff;border:none;border-radius:6px;padding:4px 10px;font-family:Montserrat,sans-serif;font-size:11px;font-weight:700;cursor:pointer">+</button>
-          </div>
+          ${(e.sueldoHistory&&e.sueldoHistory.length)?`<div style="font-size:9px;color:var(--text3)">${e.sueldoHistory.length} entrada${e.sueldoHistory.length>1?'s':''} en historial</div>`:''}
         </div>`;
 
     // Fechas laborales editables
@@ -2074,22 +2073,50 @@ function saveSueldo(id){
   save();renderDash();renderEquipo();renderProyeccion();
 }
 
-function guardarSueldoHistory(id){
+function toggleSueldoHist(id){
   const e=S.empleados.find(x=>x.id===id);if(!e)return;
-  const monto=parseFloat(document.getElementById('sh-monto-'+id).value)||0;
-  const desde=document.getElementById('sh-desde-'+id).value;
-  const nota=document.getElementById('sh-nota-'+id).value.trim();
+  document.getElementById('sh-emp-id').value=id;
+  document.getElementById('sh-nombre').textContent=e.nombre;
+  document.getElementById('sh-monto').value='';
+  document.getElementById('sh-desde').value=`${S.anio}-${String(S.mes+1).padStart(2,'0')}`;
+  document.getElementById('sh-nota').value='';
+  renderSueldoHistLista(id);
+  openModal('m-sueldo-hist');
+}
+
+function renderSueldoHistLista(id){
+  const e=S.empleados.find(x=>x.id===id);if(!e)return;
+  const lista=document.getElementById('sh-lista');if(!lista)return;
+  const hist=[...(e.sueldoHistory||[])].sort((a,b)=>b.desde.localeCompare(a.desde));
+  if(!hist.length){lista.innerHTML='<div style="color:var(--text3);font-size:12px">Sin historial aún.</div>';return;}
+  lista.innerHTML=hist.map(h=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <input type="month" value="${h.desde}" onchange="editSueldoDesde(${id},'${h.desde}',this.value)" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text);font-family:Montserrat,sans-serif;font-size:11px;outline:none;flex-shrink:0">
+      <span style="font-size:13px;font-weight:700;color:var(--text)">${fmt(h.monto)}</span>
+      <span style="font-size:10px;color:var(--text3);flex:1;font-style:italic">${h.nota||''}</span>
+      ${hist.length>1?`<button onclick="borrarSueldoHistory(${id},'${h.desde}')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:13px;padding:0 2px">✕</button>`:''}
+    </div>`).join('');
+}
+
+function guardarSueldoHistory(){
+  const id=parseInt(document.getElementById('sh-emp-id').value);
+  const e=S.empleados.find(x=>x.id===id);if(!e)return;
+  const monto=parseFloat(document.getElementById('sh-monto').value)||0;
+  const desde=document.getElementById('sh-desde').value;
+  const nota=document.getElementById('sh-nota').value.trim();
   if(!monto)return alert('Ingresá el monto');
   if(!desde)return alert('Elegí el mes');
   if(!e.sueldoHistory)e.sueldoHistory=[];
   const idx=e.sueldoHistory.findIndex(h=>h.desde===desde);
   if(idx>=0)e.sueldoHistory[idx]={monto,desde,nota};
   else e.sueldoHistory.push({monto,desde,nota});
-  // Actualizar sueldo actual si es el más reciente
-  const latest=e.sueldoHistory.sort((a,b)=>b.desde.localeCompare(a.desde))[0];
+  // Actualizar sueldo actual si es el más reciente vigente
   const mesActual=`${S.anio}-${String(S.mes+1).padStart(2,'0')}`;
-  if(latest.desde<=mesActual)e.sueldo=latest.monto;
-  save();renderEquipo();renderDash();renderProyeccion();
+  const vigentes=e.sueldoHistory.filter(h=>h.desde<=mesActual).sort((a,b)=>b.desde.localeCompare(a.desde));
+  if(vigentes.length)e.sueldo=vigentes[0].monto;
+  document.getElementById('sh-monto').value='';
+  document.getElementById('sh-nota').value='';
+  save();renderSueldoHistLista(id);renderEquipo();renderDash();renderProyeccion();
 }
 
 function editSueldoDesde(id,desdeViejo,desdeNuevo){
@@ -2105,7 +2132,7 @@ function borrarSueldoHistory(id,desde){
   const e=S.empleados.find(x=>x.id===id);if(!e||!e.sueldoHistory)return;
   if(e.sueldoHistory.length<=1)return alert('Debe quedar al menos un registro');
   e.sueldoHistory=e.sueldoHistory.filter(h=>h.desde!==desde);
-  save();renderEquipo();
+  save();renderSueldoHistLista(id);renderEquipo();
 }
 
 // ─── RENDER GASTOS ───────────────────────────────────────────────────────────
