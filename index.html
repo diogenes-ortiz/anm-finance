@@ -2014,10 +2014,10 @@ function renderEquipo(){
       <td>${sueldoCell}</td>
       <td>${fechasCell}</td>
       <td>${estadoBadge}</td>
-      <td style="display:flex;gap:6px">
+      <td style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
         ${!esSocio(e)&&!esEx?`<button class="btn bg bsm" onclick="marcarSalida(${e.id})">Dar de baja</button>`:''}
         ${esEx?`<button class="btn bs bsm" onclick="reactivarEmp(${e.id})">Reactivar</button>`:''}
-        <button class="btn bd bsm" onclick="delEmpleado(${e.id})">✕</button>
+        ${!esSocio(e)?`<button class="btn bd bsm" onclick="delEmpleado(${e.id})" title="Eliminar definitivamente">✕</button>`:''}
       </td>
     </tr>`;
   }).join('');
