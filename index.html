@@ -1521,15 +1521,18 @@ function renderDashEquipo(dioAmt=0,santiAmt=0){
       ${cNames}<span style="font-size:10px;color:var(--text3)">✎</span>
     </div>`;
     const monto=esSocio?montoSocio:getSueldoEnMes(e);
-    const esActivo=(activo||!!e.finLaboral)&&!skipped;
+    const esEx=!!e.finLaboral;
+    const esActivo=(activo||esEx)&&!skipped;
 
-    // Estado+pago: single toggle button
+    // Estado+pago
     let estadoBtn='';
     if(skipped){
       estadoBtn=`<span class="badge b-gr" style="font-size:11px;padding:5px 12px">No trabajó</span>`;
-    } else if(!activo){
+    } else if(!activo&&!esEx){
+      // Inactivo sin fechas definidas — no debería aparecer pero por si acaso
       estadoBtn=`<span class="badge b-gr" style="font-size:11px;padding:5px 12px">Inactivo</span>`;
     } else {
+      // Activa o ex-empleada que trabajó este mes → mostrar toggle pago
       estadoBtn=`<button onclick="togglePagoEq(${e.id})" style="
         background:${p?'rgba(45,202,114,.15)':'rgba(232,184,74,.12)'};
         border:1.5px solid ${p?'rgba(45,202,114,.4)':'rgba(232,184,74,.35)'};
@@ -1540,8 +1543,8 @@ function renderDashEquipo(dioAmt=0,santiAmt=0){
       ">${p?'✓ Pagado':'⏳ Pendiente'}</button>`;
     }
 
-    // X para marcar/desmarcar "no trabajó este mes"
-    const skipBtn=activo
+    // Botón ✕ para ocultar del mes (todos los no-socios)
+    const skipBtn=!esSocio
       ? `<button onclick="toggleSkip(${e.id})" title="${skipped?'Reactivar para este mes':'No trabajó este mes'}" style="
           background:${skipped?'rgba(26,115,232,.12)':'rgba(255,255,255,.05)'};
           border:1px solid ${skipped?'rgba(26,115,232,.3)':'var(--border)'};
@@ -1549,13 +1552,7 @@ function renderDashEquipo(dioAmt=0,santiAmt=0){
           border-radius:7px;padding:5px 10px;font-size:13px;font-weight:700;
           cursor:pointer;font-family:Montserrat,sans-serif;transition:all .15s
         ">${skipped?'↩':'✕'}</button>`
-      : !esSocio
-        ? `<button onclick="toggleSkip(${e.id})" title="Ocultar del mes" style="
-            background:rgba(255,255,255,.05);border:1px solid var(--border);
-            color:var(--text3);border-radius:7px;padding:5px 10px;font-size:13px;font-weight:700;
-            cursor:pointer;font-family:Montserrat,sans-serif;transition:all .15s
-          ">✕</button>`
-        : '';
+      : '';
 
     return`<tr style="${esActivo?'':'opacity:.5'}">
       <td><div class="erow">
