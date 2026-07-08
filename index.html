@@ -1168,7 +1168,7 @@ function addGasto(){
   save(); closeModal('m-gasto'); render();
 }
 
-function delCliente(id){ if(!confirm('¿Eliminar?'))return; S.clientes=S.clientes.filter(c=>c.id!==id); save();render(); }
+function delCliente(id){ const c=S.clientes.find(x=>x.id===id); const nom=c?c.nombre:''; if(!confirm('¿Eliminar el cliente "'+nom+'"? Se borrarán sus datos de configuración. Esta acción no se puede deshacer.'))return; S.clientes=S.clientes.filter(c=>c.id!==id); S.empleados.forEach(e=>{ if(e.clienteIds)e.clienteIds=e.clienteIds.filter(x=>x!==id); }); save();render(); }
 function delProyecto(id){ if(!confirm('¿Eliminar?'))return; S.proyectos=S.proyectos.filter(p=>p.id!==id); save();renderProyectos();renderDash(); }
 function delEmpleado(id){ if(!confirm('¿Eliminar definitivamente?'))return; S.empleados=S.empleados.filter(e=>e.id!==id); save();render(); }
 function delGasto(id){ if(!confirm('¿Eliminar?'))return; S.gastos=S.gastos.filter(g=>g.id!==id); save();render(); }
@@ -1841,7 +1841,8 @@ function renderConfig(){
       <div class="cflabel" style="margin-bottom:5px">Inicio de servicio</div>
       <div style="margin-bottom:14px"><input type="month" id="inicio-${c.id}" value="${c.inicioServicio||''}" onchange="saveInicio(${c.id})" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-family:Montserrat,sans-serif;font-size:13px;outline:none;width:100%"></div>
       <div class="cflabel">Equipo asignado</div>
-      <div class="tags-wrap">${empTags||'<span style="color:var(--text3);font-size:11px">Sin equipo</span>'}</div>
+      <div class="tags-wrap" style="margin-bottom:14px">${empTags||'<span style="color:var(--text3);font-size:11px">Sin equipo</span>'}</div>
+      <button onclick="delCliente(${c.id})" style="width:100%;padding:8px;background:none;color:var(--red,#e5484d);border:1px solid var(--red,#e5484d);border-radius:8px;font-family:Montserrat,sans-serif;font-size:12px;font-weight:700;cursor:pointer">🗑 Eliminar cliente</button>
     </div>`;
   }).join('');
 }
