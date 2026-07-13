@@ -987,8 +987,10 @@ function togglePagoEq(id){ const k=eKey(id),i=S.pagosEq.findIndex(x=>x.key===k);
 
 // ─── CALCS ───────────────────────────────────────────────────────────────────
 function clienteVigenteEnMes(c){
-  if(c.estado!=='activo') return false;
-  if(c.inicioServicio){ const m=`${S.anio}-${String(S.mes+1).padStart(2,'0')}`; if(c.inicioServicio>m) return false; }
+  if(c.estado==='inactivo'&&!c.finServicio) return false;
+  const m=`${S.anio}-${String(S.mes+1).padStart(2,'0')}`;
+  if(c.inicioServicio&&c.inicioServicio>m) return false;
+  if(c.finServicio&&c.finServicio<m) return false;
   if(clientePausadoMes(c.id)) return false;
   return true;
 }
@@ -1168,7 +1170,9 @@ function addGasto(){
   save(); closeModal('m-gasto'); render();
 }
 
-function delCliente(id){ const c=S.clientes.find(x=>x.id===id); const nom=c?c.nombre:''; if(!confirm('¿Eliminar el cliente "'+nom+'"? Se borrarán sus datos de configuración. Esta acción no se puede deshacer.'))return; S.clientes=S.clientes.filter(c=>c.id!==id); S.empleados.forEach(e=>{ if(e.clienteIds)e.clienteIds=e.clienteIds.filter(x=>x!==id); }); save();render(); }
+function darDeBaja(id){ const c=S.clientes.find(x=>x.id===id); if(!c)return; const now=`${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}`; const mes=prompt('¿Cuál fue el último mes que '+c.nombre+' trabajó con nosotros? (YYYY-MM, ej: '+now+')\n\nSe conserva todo el historial de pagos. Desde el mes siguiente deja de contar.',now); if(!mes)return; if(!/^\d{4}-\d{2}$/.test(mes.trim()))return alert('Formato inválido. Usá YYYY-MM, ej: '+now); c.finServicio=mes.trim(); c.estado='inactivo'; save();render(); }
+function reactivarCliente(id){ const c=S.clientes.find(x=>x.id===id); if(!c)return; c.finServicio=null; c.estado='activo'; save();render(); }
+function delCliente(id){ const c=S.clientes.find(x=>x.id===id); const nom=c?c.nombre:''; if(!confirm('¿Eliminar DEFINITIVAMENTE a "'+nom+'"?\n\n⚠️ Se borra el cliente y su historial de pagos. Esto NO se puede deshacer.\n\nSi solo dejó de trabajar con ustedes, usá "Dar de baja" en su lugar.'))return; S.clientes=S.clientes.filter(c=>c.id!==id); S.empleados.forEach(e=>{ if(e.clienteIds)e.clienteIds=e.clienteIds.filter(x=>x!==id); }); save();render(); }
 function delProyecto(id){ if(!confirm('¿Eliminar?'))return; S.proyectos=S.proyectos.filter(p=>p.id!==id); save();renderProyectos();renderDash(); }
 function delEmpleado(id){ if(!confirm('¿Eliminar definitivamente?'))return; S.empleados=S.empleados.filter(e=>e.id!==id); save();render(); }
 function delGasto(id){ if(!confirm('¿Eliminar?'))return; S.gastos=S.gastos.filter(g=>g.id!==id); save();render(); }
@@ -1816,17 +1820,19 @@ function renderProyeccion(){
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
 function renderConfig(){
   const grid=document.getElementById('cfg-clientes'); if(!grid)return;
-  const activos=S.clientes.filter(c=>c.estado==='activo');
-  if(!activos.length){ grid.innerHTML='<div style="color:var(--text2);font-size:12px">No hay clientes activos.</div>'; return; }
+  const esBaja=c=>c.estado==='inactivo'||!!c.finServicio;
+  const activos=[...S.clientes].sort((a,b)=>(esBaja(a)?1:0)-(esBaja(b)?1:0));
+  if(!activos.length){ grid.innerHTML='<div style="color:var(--text2);font-size:12px">No hay clientes cargados.</div>'; return; }
   grid.innerHTML=activos.map((c,i)=>{
+    const baja=esBaja(c);
     if(!c.retainerHistory||!c.retainerHistory.length) c.retainerHistory=[{monto:c.presupuesto??c.retainer??0,desde:'2025-09',nota:'Inicial'}];
     const histSorted=[...c.retainerHistory].sort((a,b)=>b.desde.localeCompare(a.desde));
     const montoActual=retainer(c);
     const empTags=S.empleados.map(e=>{ const assigned=(e.clienteIds||[]).includes(c.id); return`<span class="checktag ${assigned?'on':''}" onclick="toggleEmpCliente(${e.id},${c.id})">${e.nombre}</span>`; }).join('');
     const histHtml=histSorted.map(h=>{ const [y,m]=h.desde.split('-'); return`<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);gap:8px"><input type="month" value="${h.desde}" onchange="editRetainerDesde(${c.id},'${h.desde}',this.value)" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:3px 7px;color:var(--text);font-family:Montserrat,sans-serif;font-size:11px;outline:none;flex-shrink:0;width:130px"><div style="font-size:12px;font-weight:700;color:var(--text);flex-shrink:0">${fmt(h.monto)}</div><div style="font-size:10px;color:var(--text3);flex:1;text-align:right;font-style:italic">${h.nota||''}</div>${histSorted.length>1?`<button onclick="borrarRetainerHistory(${c.id},'${h.desde}')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:12px;padding:0 2px;flex-shrink:0">✕</button>`:''}</div>`; }).join('');
     const now=`${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}`;
-    return`<div class="cfcard">
-      <div class="cfname"><div class="av" style="background:${COLS[i%COLS.length]};color:#fff;width:26px;height:26px;font-size:10px">${ini(c.nombre)}</div>${c.nombre} <span class="badge ${TIPO_BADGE[c.tipo]||'b-gr'}" style="margin-left:4px">${TIPO_LABEL[c.tipo]||c.tipo}</span><span style="margin-left:auto;font-size:13px;font-weight:800;color:var(--blue)">${fmt(montoActual)}</span></div>
+    return`<div class="cfcard" style="${baja?'opacity:.62':''}">
+      <div class="cfname"><div class="av" style="background:${COLS[i%COLS.length]};color:#fff;width:26px;height:26px;font-size:10px">${ini(c.nombre)}</div>${c.nombre} <span class="badge ${TIPO_BADGE[c.tipo]||'b-gr'}" style="margin-left:4px">${TIPO_LABEL[c.tipo]||c.tipo}</span>${baja?`<span class="badge b-r" style="margin-left:4px">Baja${c.finServicio?' · hasta '+fmtMes(c.finServicio):''}</span>`:''}<span style="margin-left:auto;font-size:13px;font-weight:800;color:var(--blue)">${fmt(montoActual)}</span></div>
       <div class="cflabel" style="margin-bottom:6px">Actualizar retainer</div>
       <div style="display:flex;gap:7px;margin-bottom:5px;flex-wrap:wrap">
         <input type="number" id="bgt-${c.id}" placeholder="Nuevo monto" style="flex:1;min-width:100px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-family:Montserrat,sans-serif;font-size:13px;font-weight:700;outline:none">
@@ -1838,11 +1844,18 @@ function renderConfig(){
       <div style="margin-bottom:14px">${histHtml}</div>
       <div class="cflabel">Servicios acordados</div>
       <div class="cfservices" style="margin-bottom:12px"><textarea id="srv-${c.id}" onchange="saveSrv(${c.id})" placeholder="Ej: 3 posts/sem, stories, reels×2...">${c.servicios||''}</textarea></div>
-      <div class="cflabel" style="margin-bottom:5px">Inicio de servicio</div>
-      <div style="margin-bottom:14px"><input type="month" id="inicio-${c.id}" value="${c.inicioServicio||''}" onchange="saveInicio(${c.id})" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-family:Montserrat,sans-serif;font-size:13px;outline:none;width:100%"></div>
+      <div style="display:flex;gap:10px;margin-bottom:14px">
+        <div style="flex:1"><div class="cflabel" style="margin-bottom:5px">Inicio de servicio</div>
+          <input type="month" id="inicio-${c.id}" value="${c.inicioServicio||''}" onchange="saveInicio(${c.id})" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-family:Montserrat,sans-serif;font-size:13px;outline:none;width:100%"></div>
+        <div style="flex:1"><div class="cflabel" style="margin-bottom:5px">Fin (baja)</div>
+          <input type="month" id="fin-${c.id}" value="${c.finServicio||''}" onchange="saveFinCliente(${c.id},this.value)" placeholder="(activo)" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:${baja?'var(--red)':'var(--text)'};font-family:Montserrat,sans-serif;font-size:13px;outline:none;width:100%"></div>
+      </div>
       <div class="cflabel">Equipo asignado</div>
       <div class="tags-wrap" style="margin-bottom:14px">${empTags||'<span style="color:var(--text3);font-size:11px">Sin equipo</span>'}</div>
-      <button onclick="delCliente(${c.id})" style="width:100%;padding:8px;background:none;color:var(--red,#e5484d);border:1px solid var(--red,#e5484d);border-radius:8px;font-family:Montserrat,sans-serif;font-size:12px;font-weight:700;cursor:pointer">🗑 Eliminar cliente</button>
+      ${baja
+        ? `<button onclick="reactivarCliente(${c.id})" style="width:100%;padding:9px;background:var(--green);color:#fff;border:none;border-radius:8px;font-family:Montserrat,sans-serif;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:7px">↩ Reactivar cliente</button>`
+        : `<button onclick="darDeBaja(${c.id})" style="width:100%;padding:9px;background:none;color:var(--yellow,#e8a84a);border:1px solid var(--yellow,#e8a84a);border-radius:8px;font-family:Montserrat,sans-serif;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:7px">Dar de baja (conserva historial)</button>`}
+      <button onclick="delCliente(${c.id})" style="width:100%;padding:6px;background:none;color:var(--text3);border:none;border-radius:8px;font-family:Montserrat,sans-serif;font-size:11px;font-weight:600;cursor:pointer;text-decoration:underline">Eliminar definitivamente</button>
     </div>`;
   }).join('');
 }
@@ -1862,6 +1875,7 @@ function editRetainerDesde(cid,desdeViejo,desdeNuevo){ const c=S.clientes.find(x
 function borrarRetainerHistory(cid,desde){ const c=S.clientes.find(x=>x.id===cid); if(!c||!c.retainerHistory)return; if(c.retainerHistory.length<=1)return alert('Debe quedar al menos un registro'); c.retainerHistory=c.retainerHistory.filter(h=>h.desde!==desde); save();renderConfig();renderDash(); }
 function saveSrv(id){ const c=S.clientes.find(x=>x.id===id); if(!c)return; c.servicios=document.getElementById('srv-'+id).value; save(); }
 function saveInicio(id){ const c=S.clientes.find(x=>x.id===id); if(!c)return; c.inicioServicio=document.getElementById('inicio-'+id).value; save(); renderDash(); }
+function saveFinCliente(id,val){ const c=S.clientes.find(x=>x.id===id); if(!c)return; c.finServicio=val||null; c.estado=val?'inactivo':'activo'; save(); render(); }
 
 // ─── BACKUP ───────────────────────────────────────────────────────────────────
 function descargarBackup(){
