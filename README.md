@@ -12,6 +12,7 @@ Plataforma de la agencia con tres áreas + equipo. No necesita instalación ni c
 | `js/game.js` | Gamificación: XP, niveles, rachas, insignias, misiones semanales |
 | `js/ops.js` | Operaciones |
 | `js/growth.js` | Crecimiento / CRM |
+| `js/prospects-hunter.js` | Base de 50 prospectos del informe Hunter |
 | `js/home.js` | Inicio, Equipo y Ajustes |
 | `js/finanzas-extra.js` | Contraseña, Análisis y Cierre del mes de Finanzas |
 
@@ -26,15 +27,20 @@ Plataforma de la agencia con tres áreas + equipo. No necesita instalación ni c
 - *Reuniones y minutas*: minuta, decisiones, temáticas (#etiquetas) y acuerdos. “✨ Detectar acuerdos” lee un resumen pegado (Read AI, Meet, etc.) y los convierte en tareas (`@Nombre` asigna, `dd/mm` pone fecha).
 - *Alertas*: se calculan solas (clientes sin actualizar, en riesgo, tareas vencidas, reuniones sin minuta, calendarios sin aprobar, contenido por salir sin aprobar). “Avisar” la manda en la app, por WhatsApp o email.
 
-**Crecimiento** — pipeline arrastrable (Queremos contactar → Contactado → Reunión → Propuesta → Negociación → Ganado), base de contactos con importación CSV, ex clientes con fecha de recontacto, evaluador “¿es buena empresa?” (puntaje A-D según criterios de cliente ideal editables + tasa de cierre por fuente y rubro) y métricas. Al ganar un cliente se crea en Operaciones; al dar de baja uno en Operaciones se ofrece guardarlo como ex cliente.
+**Crecimiento** (sin montos: todo lo económico vive en Finanzas)
+- *Hoy toca contactar*: seguimientos vencidos primero y después los prospectos sin contactar, ordenados por **🔥 ganas** (1 a 5, se cambia con un clic).
+- *Armar y mandar mensaje*: plantillas por toque (1º observación concreta, 2º aportar una idea, 3º credencial del rubro con MiPileta, recontacto de ex cliente) que se completan con los datos del prospecto. Se manda por WhatsApp, email o LinkedIn; queda registrado, pasa a “Contactado” y agenda el próximo toque a 4 días.
+- *Ficha del prospecto*: oportunidad que vemos, con qué entraríamos y **puntos fuertes que le aportamos** según el enfoque (rescatar presencia / demanda + WhatsApp / performance-CRM).
+- *Lista Hunter*: botón para importar los 50 prospectos del informe (sanitarios, grifería, bombas, calefacción) con contactos, decisores y pieza de entrada (`js/prospects-hunter.js`).
+- Pipeline arrastrable, base de contactos (CSV), ex clientes con fecha de recontacto, plantillas editables y métricas (respuesta, cierre, embudo, fuentes).
 
-**Finanzas** (solo admins, con contraseña) — todo lo de antes, más:
+**Finanzas** (solo socios, con contraseña) — todo lo de antes, más:
 - *Análisis y comparativas*: período (mes, 3/6/12 meses, año, todo, personalizado) comparado con el período anterior o el mismo del año anterior; KPIs con variación, gráfico, ingresos por servicio, concentración de clientes, tabla mes a mes y conclusiones automáticas.
 - *Cierre del mes*: preguntas mensuales (cobros, saldo real, imprevistos, cambios, ánimo…) editables, con racha de meses cerrados.
 - La primera vez se crea la contraseña y se muestra un **código de recuperación**: guardalo. Se bloquea sola a los 20 minutos sin uso.
 
 ## Equipo e invitaciones
-El primero que entra crea su perfil de admin. Desde **Equipo** se invita a cada persona y se le manda su link personal (WhatsApp/email). Roles: *Admin* (todo + Finanzas), *Equipo* (Operaciones + Crecimiento), *Invitado/a* (solo Operaciones).
+El primero que entra crea su perfil de socio. Desde **Equipo** se invita a cada persona y se le manda su link personal (WhatsApp/email). Roles: *Socio/a* (dueños — Dio y Santi: todo + Finanzas, invitan y asignan tareas a cualquiera), *Equipo* (Operaciones + Crecimiento; se asigna tareas a sí mismo), *Invitado/a* (solo Operaciones). Finanzas no aparece para quien no es socio.
 
 ## Datos
 Todo vive en la tabla `anm_state` de Supabase (la misma de siempre): `main` = Finanzas (sin cambios de formato), `ops`, `growth`, `team` = plataforma. Varias personas pueden editar a la vez: los cambios se fusionan registro por registro y se sincronizan cada ~20 s. Hay respaldo descargable en Ajustes.

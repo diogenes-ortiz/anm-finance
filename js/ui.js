@@ -33,7 +33,6 @@
     return fdate(iso.slice(0,10),{abs:true});
   }
   const time = iso => iso && iso.length>10 ? iso.slice(11,16) : '';
-  const money = n => '$'+Number(n||0).toLocaleString('es-AR',{maximumFractionDigits:0});
   const initials = n => (n||'?').trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
 
   function avatar(m, cls=''){
@@ -142,6 +141,6 @@
     });
   }
 
-  window.UI = { $, esc, MONTHS, DAYS, COLORS, pad, ymd, today, parse, addDays, diffDays, ym, ymLabel, fdate, ago, time, money, initials,
+  window.UI = { $, esc, MONTHS, DAYS, COLORS, pad, ymd, today, parse, addDays, diffDays, ym, ymLabel, fdate, ago, time, initials,
     avatar, form, modal, close, toast, confetti, copy, waLink, mailLink, download, kanban };
 })();

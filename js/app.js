@@ -1,7 +1,7 @@
 // ─── APP: identidad, navegación, shell ────────────────────────────────────────
 (function(){
   const { esc, $ } = UI;
-  const ROLES = { admin:'Admin (ve Finanzas)', equipo:'Equipo', invitado:'Invitado/a (solo Operaciones)' };
+  const ROLES = { admin:'Socio/a · dueño de la agencia (ve Finanzas)', equipo:'Equipo', invitado:'Invitado/a (solo Operaciones)' };
   const DEFAULT_UNITS = [
     { id:'social', label:'Social Media', color:'#1A73E8' },
     { id:'pauta', label:'Pauta', color:'#9b6fe8' },
@@ -26,6 +26,8 @@
     unit(id){ return this.units().find(u=>u.id===id) || { id, label:id, color:'#7a7a8c' }; },
     unitOpts(){ return this.units().map(u=>[u.id,u.label]); },
     memberOpts(empty='— Sin asignar —'){ return [['',empty], ...this.members().map(m=>[m.id,m.name])]; },
+    // Solo los socios asignan trabajo a otras personas; el resto se asigna a sí mismo
+    assignOpts(){ const me = this.me(); return this.isAdmin() ? this.memberOpts() : [[me.id, me.name]]; },
     unitTags(ids=[]){ return ids.map(id=>{ const u=this.unit(id); return `<span class="tag" style="background:${u.color}22;color:${u.color}">${esc(u.label)}</span>`; }).join(' '); },
 
     // Filtro global por unidad de negocio (se recuerda por navegador)
@@ -106,7 +108,7 @@
     const members = App.members();
     if(!members.length){
       g.innerHTML = `<div class="mbox"><div class="row" style="margin-bottom:18px"><img src="logo.jpg" alt="" style="width:46px;height:46px;border-radius:12px"><div><div class="brand-t">ANM</div><div class="brand-s">Studio · Plataforma</div></div></div>
-        <h2>¡Bienvenido/a! 👋</h2><p class="muted" style="margin-bottom:18px">Creá tu perfil. Vas a ser admin: podés invitar al equipo y ver Finanzas.</p>
+        <h2>¡Bienvenido/a! 👋</h2><p class="muted" style="margin-bottom:18px">Creá tu perfil. Vas a entrar como socio/a: podés invitar al equipo, asignar tareas y ver Finanzas.</p>
         <div class="fld"><label>Tu nombre</label><input class="inp" id="g-name" placeholder="Ej: Dio"></div>
         <div class="fld"><label>Email</label><input class="inp" id="g-email" type="email" placeholder="opcional"></div>
         ${Store.status==='error'?'<div class="alert warn"><div class="ai">⚠️</div><div class="ad">No hay conexión con la base de datos. Si tu equipo ya usa la plataforma, esperá a tener conexión antes de crear un perfil nuevo.</div></div>':''}
@@ -118,7 +120,7 @@
       <div class="fld"><label>Perfil</label><select class="inp" id="g-member">${members.map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join('')}</select></div>
       <div class="fld"><label>Código de invitación</label><input class="inp" id="g-code" placeholder="Ej: K3F9QZ" style="text-transform:uppercase"></div>
       <button class="btn p" style="width:100%;justify-content:center" onclick="App.claim()">Entrar</button>
-      <p class="xs faint" style="margin-top:14px">¿No tenés código? Pedile a un admin el link desde “Equipo e invitaciones”.</p></div>`;
+      <p class="xs faint" style="margin-top:14px">¿No tenés código? Pedile a un socio el link desde “Equipo e invitaciones”.</p></div>`;
   }
 
   App.createFirst = ()=>{
@@ -211,7 +213,7 @@
     let pending = false;
     Store.on(ev=>{ if(ev.type!=='change') return; if(pending) return; pending = true;
       requestAnimationFrame(()=>{ pending = false; if(!$('#modal').classList.contains('open') && !document.activeElement?.matches('input,textarea,select')) App.render(); }); });
-    window.addEventListener('hashchange', ()=>{ App.render(); window.scrollTo(0,0); });
+    window.addEventListener('hashchange', ()=>{ UI.close(); App.render(); window.scrollTo(0,0); });
     App.render();
   }
   window.App = App;

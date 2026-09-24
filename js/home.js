@@ -72,7 +72,7 @@
         ${admin?`<div class="row wrap"><button class="btn sm p" onclick="Team.share('${m.id}')">🔗 Link de acceso</button><button class="btn sm g" onclick="Team.edit('${m.id}')">✎ Editar</button></div>`:''}</div>`;
     }).join('');
     return { title:'Equipo', crumb:'Invitá a colaborar', html:`
-      <div class="toolbar"><div class="small muted grow">Cada persona entra con su link personal. Los roles definen qué ve: <b>Admin</b> (todo + Finanzas), <b>Equipo</b> (Operaciones + Crecimiento), <b>Invitado/a</b> (solo Operaciones, ideal freelancers).</div>
+      <div class="toolbar"><div class="small muted grow">Cada persona entra con su link personal. Los roles definen qué ve cada uno: <b>Socio/a</b> (dueños: todo + Finanzas, invitan y asignan tareas a cualquiera), <b>Equipo</b> (Operaciones + Crecimiento; se asigna tareas a sí mismo), <b>Invitado/a</b> (solo Operaciones, ideal freelancers). Finanzas no aparece para quien no es socio.</div>
       ${admin?'<button class="btn p" onclick="Team.edit()">＋ Invitar persona</button>':''}</div>
       <div class="grid g-auto">${cards}</div>` };
   });
@@ -92,7 +92,7 @@
         <div class="row wrap"><button class="btn g" onclick="Store.syncNow().then(()=>UI.toast('Sincronizado','☁️'))">⟳ Sincronizar ahora</button><button class="btn g" onclick="UI.download('anm-plataforma-'+UI.today()+'.json', Store.exportAll())">⇣ Descargar respaldo</button>
         ${admin?'<label class="btn g" style="cursor:pointer">⇡ Restaurar respaldo<input type="file" accept=".json" style="display:none" onchange="Team.restore(this)"></label>':''}</div></div>
       <div class="card"><div class="card-h"><h3>🔒 Sobre la seguridad</h3></div>
-        <p class="small muted">Finanzas pide contraseña y solo aparece para admins. Los links de invitación identifican a cada persona para asignar tareas y XP.</p>
+        <p class="small muted">Finanzas pide contraseña y solo aparece para los socios. Los links de invitación identifican a cada persona para asignar tareas y XP.</p>
         <p class="small muted" style="margin-top:8px">Importante: hoy la base de datos usa una clave pública, así que la protección es “de uso” (evita miradas casuales), no bancaria. Para blindarlo el próximo paso es activar el login con email de Supabase y reglas de acceso por rol.</p></div>
     </div>` };
   });
@@ -112,7 +112,7 @@
       ],
       danger: id && admin && id!==App.me().id ? { label:'Quitar del equipo', confirm:`¿Quitar a ${m.name}? Su historial se conserva, pero ya no podrá entrar.`, fn:()=>{ Store.remove('team','members',id); App.render(); } } : null,
       onSubmit:v=>{
-        if(id && m.role==='admin' && v.role && v.role!=='admin' && !adminsLeft){ UI.toast('Tiene que quedar al menos un admin','⚠️'); return false; }
+        if(id && m.role==='admin' && v.role && v.role!=='admin' && !adminsLeft){ UI.toast('Tiene que quedar al menos un socio','⚠️'); return false; }
         const r = Store.upsert('team','members',{ ...m, ...v, invite:m.invite||App.newInvite() });
         if(!id){ Game.log('member_invited', `Invitó a ${v.name}`, { icon:'👋' }); setTimeout(()=>Team.share(r.id), 50); }
         App.render();

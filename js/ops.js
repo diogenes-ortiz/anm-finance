@@ -410,7 +410,7 @@
       UI.form({ title: id ? 'Tarea' : 'Nueva tarea', values:t, fields:[
         { k:'title', label:'¿Qué hay que hacer?', req:true },
         { k:'clientId', label:'Cliente', type:'select', options:clientOpts(), half:true }, { k:'unit', label:'Unidad', type:'select', options:[['','—'],...App.unitOpts()], half:true },
-        { k:'assigneeId', label:'Responsable', type:'select', options:App.memberOpts(), half:true }, { k:'due', label:'Vence', type:'date', half:true },
+        { k:'assigneeId', label:'Responsable', type:'select', options:App.assignOpts(), half:true, hint:App.isAdmin()?'':'Solo los socios pueden asignar a otras personas.' }, { k:'due', label:'Vence', type:'date', half:true },
         { k:'status', label:'Estado', type:'select', options:TASK_ST, half:true }, { k:'priority', label:'Prioridad', type:'select', options:PRIO, half:true },
         { k:'desc', label:'Detalle', type:'textarea', rows:3 },
       ], danger: id ? { label:'Eliminar', confirm:'¿Eliminar la tarea?', fn:()=>{ Store.remove('ops','tasks',id); App.render(); } } : null,
@@ -430,7 +430,7 @@
         { k:'title', label:'Título / idea', req:true, placeholder:'Ej: Reel lanzamiento colección' },
         { k:'clientId', label:'Cliente', type:'select', options:clientOpts('— Contenido propio ANM —'), half:true }, { k:'date', label:'Fecha de publicación / entrega', type:'date', req:true, half:true },
         { k:'format', label:'Formato', type:'select', options:FORMATS, half:true }, { k:'status', label:'Estado', type:'select', options:CONTENT_ST, half:true },
-        { k:'unit', label:'Unidad', type:'select', options:[['','(la del cliente)'],...App.unitOpts()], half:true }, { k:'assigneeId', label:'Responsable', type:'select', options:App.memberOpts(), half:true },
+        { k:'unit', label:'Unidad', type:'select', options:[['','(la del cliente)'],...App.unitOpts()], half:true }, { k:'assigneeId', label:'Responsable', type:'select', options:App.assignOpts(), half:true },
         { k:'notes', label:'Copy / brief / links', type:'textarea', rows:4 },
       ], danger: id ? { label:'Eliminar', confirm:'¿Eliminar la pieza?', fn:()=>{ Store.remove('ops','content',id); App.render(); } } : null,
       onSubmit:v=>{

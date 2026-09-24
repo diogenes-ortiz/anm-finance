@@ -4,7 +4,7 @@
 (function(){
   const XP = {
     task_done:10, task_ontime:5, client_update:8, meeting:5, minuta:15, content:3, content_published:5,
-    calendar_approved:20, lead:5, lead_advance:10, lead_won:100, interaction:5, score:5,
+    calendar_approved:20, lead:5, lead_advance:10, lead_won:100, interaction:5,
     alert_sent:3, member_invited:10, joined:20, finance_close:50,
   };
   const LEVELS = [
