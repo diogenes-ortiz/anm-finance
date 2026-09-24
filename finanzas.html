@@ -843,6 +843,7 @@ tr:hover td{background:rgba(26,115,232,.03)}
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="js/config.js"></script>
 <script>
 // ─── STATE ───────────────────────────────────────────────────────────────────
 // FIX: Separamos claves de datos base vs datos de usuario para que initSeed
@@ -866,8 +867,8 @@ const TIPO_BADGE={rrss:'b-bl',pauta:'b-p','rrss+pauta':'b-t',web:'b-g',branding:
 let charts={};
 
 // ─── SUPABASE ─────────────────────────────────────────────────────────────────
-const SB_URL = 'https://sdlhjhtwlzeifawbrzxm.supabase.co';
-const SB_KEY = 'sb_publishable_wxWSD6OLPhKBOdgEHyeGcg_WwleQWqJ';
+const SB_URL = window.ANM_CONFIG.SUPABASE_URL;   // definido en js/config.js
+const SB_KEY = window.ANM_CONFIG.SUPABASE_KEY;
 const SB_HEADERS = { 'Content-Type': 'application/json', 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY };
 
 let saveTimeout = null;

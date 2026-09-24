@@ -5,8 +5,7 @@
 // Al guardar, primero traemos la versión remota y fusionamos registro por registro
 // (gana el updatedAt más nuevo). Así dos personas editando a la vez no se pisan.
 (function(){
-  const SB_URL = 'https://sdlhjhtwlzeifawbrzxm.supabase.co';
-  const SB_KEY = 'sb_publishable_wxWSD6OLPhKBOdgEHyeGcg_WwleQWqJ';
+  const { SUPABASE_URL:SB_URL, SUPABASE_KEY:SB_KEY } = window.ANM_CONFIG;
   const HEADERS = { 'Content-Type':'application/json', apikey:SB_KEY, Authorization:'Bearer '+SB_KEY };
   const DOCS = ['ops','growth','team'];
   const LS = id => 'anm_doc_'+id;
