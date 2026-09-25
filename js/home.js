@@ -10,7 +10,7 @@
     const myTasks = Ops.openTasks().filter(x=>x.assigneeId===me.id && x.due && x.due<=t).sort((a,b)=>a.due.localeCompare(b.due));
     const soon = Ops.openTasks().filter(x=>x.assigneeId===me.id && (!x.due || x.due>t)).sort((a,b)=>(a.due||'9').localeCompare(b.due||'9')).slice(0,4);
     const myMeet = Store.all('ops','meetings').filter(m=>m.date?.slice(0,10)===t && (m.attendees||[]).includes(me.id));
-    const myFollow = App.canGrowth() ? Store.all('growth','leads').filter(l=>l.ownerId===me.id && l.nextFollowUp && l.nextFollowUp<=t && Growth.STAGES.slice(0,5).some(s=>s[0]===l.stage)) : [];
+    const myFollow = App.canGrowth() ? Store.all('growth','leads').filter(l=>l.ownerId===me.id && l.nextFollowUp && l.nextFollowUp<=t && Growth.OPEN.includes(l.stage)) : [];
     const myClients = Ops.activeClients().filter(c=>c.ownerId===me.id && Ops.daysSinceUpdate(c)>7);
     const focus = myTasks.length + myMeet.length + myFollow.length + myClients.length;
     const ms = Game.missions(), done = ms.filter(m=>m.p>=1).length;

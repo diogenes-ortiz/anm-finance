@@ -32,6 +32,7 @@ Plataforma de la agencia con tres áreas + equipo. No necesita instalación ni c
 - *Armar y mandar mensaje*: plantillas por toque (1º observación concreta, 2º aportar una idea, 3º credencial del rubro con MiPileta, recontacto de ex cliente) que se completan con los datos del prospecto. Se manda por WhatsApp, email o LinkedIn; queda registrado, pasa a “Contactado” y agenda el próximo toque a 4 días.
 - *Ficha del prospecto*: oportunidad que vemos, con qué entraríamos y **puntos fuertes que le aportamos** según el enfoque (rescatar presencia / demanda + WhatsApp / performance-CRM).
 - *Lista Hunter*: botón para importar los 50 prospectos del informe (sanitarios, grifería, bombas, calefacción) con contactos, decisores y pieza de entrada (`js/prospects-hunter.js`).
+- *Etapas*: Queremos contactar → Contactado → Reunión → **🖼️ Armando la PPT** (crea sola la tarea “Armar PPT” con un brief listo para Canva/Slides y guarda el link) → PPT presentada → Negociación → **🏆 Pasó a cliente** (se crea automáticamente en Operaciones con su tarea de onboarding).
 - Pipeline arrastrable, base de contactos (CSV), ex clientes con fecha de recontacto, plantillas editables y métricas (respuesta, cierre, embudo, fuentes).
 
 **Finanzas** (solo socios, con contraseña) — todo lo de antes, más:

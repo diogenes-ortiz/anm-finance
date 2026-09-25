@@ -7,13 +7,15 @@
 
   const STAGES = [
     ['objetivo','Queremos contactar','🎯'], ['contactado','Contactado','📨'], ['reunion','Reunión','🤝'],
-    ['propuesta','Propuesta enviada','📄'], ['negociacion','Negociación','⚖️'], ['ganado','Ganado','🏆'],
+    ['ppt','Armando la PPT','🖼️'], ['propuesta','PPT presentada','📄'], ['negociacion','Negociación','⚖️'], ['ganado','Pasó a cliente','🏆'],
     ['perdido','Perdido / no avanzó','🪦'], ['ex','Ex cliente','↩️'],
   ];
-  const OPEN = ['objetivo','contactado','reunion','propuesta','negociacion'];
+  const OPEN = ['objetivo','contactado','reunion','ppt','propuesta','negociacion'];
+  const PPT_ST = [['armar','Por armar'],['armando','En armado'],['revision','En revisión interna'],['lista','Lista para presentar'],['presentada','Presentada']];
   const stage = k => STAGES.find(s=>s[0]===k) || STAGES[0];
   const stageIdx = k => STAGES.findIndex(s=>s[0]===k);
   const SOURCES = ['Hunter (investigación)','Referido','Instagram','LinkedIn','Web / formulario','Evento','Prospección propia','Ex cliente','Otro'];
+  const TOUCH_ALL = [['etapa','↪ Cambio de etapa']];
   const TOUCH = [['whatsapp','💬 WhatsApp'],['email','✉️ Email'],['linkedin','in LinkedIn'],['llamada','📞 Llamada'],['reunion','🤝 Reunión'],['dm','📱 DM redes'],['visita','🚶 Visita'],['otro','· Otro']];
   const label = (opts,v) => (opts.find(o=>o[0]===v)||[,v])[1];
 
@@ -66,6 +68,8 @@
         out.push({ level:l.nextFollowUp<t?'danger':'warn', icon:'📞', title:`Toca contactar: ${l.company}`, desc:`${l.nextAction||'Hacer seguimiento'} · ${l.nextFollowUp<t?'vencido '+UI.fdate(l.nextFollowUp):'hoy'}`, link, to:l.ownerId });
       else if(OPEN.includes(l.stage) && l.stage!=='objetivo' && UI.diffDays((l.stageAt||l.createdAt).slice(0,10))>21 && !l.nextFollowUp)
         out.push({ level:'warn', icon:'🧊', title:`${l.company} se enfrió`, desc:`Hace ${UI.diffDays((l.stageAt||l.createdAt).slice(0,10))} días en “${stage(l.stage)[1]}” y sin próximo contacto.`, link, to:l.ownerId });
+      if(l.stage==='ppt' && UI.diffDays((l.stageAt||l.createdAt).slice(0,10))>5)
+        out.push({ level:'warn', icon:'🖼️', title:`PPT de ${l.company}: hace ${UI.diffDays((l.stageAt||l.createdAt).slice(0,10))} días en armado`, desc:'Un prospecto interesado se enfría si la propuesta tarda. ¿Qué falta para presentarla?', link, to:l.ownerId });
       if(l.stage==='ex' && l.winbackDate && l.winbackDate<=t)
         out.push({ level:'warn', icon:'↩️', title:`Momento de recontactar a ${l.company}`, desc:`Ex cliente${l.churnReason?' · se fue por: '+l.churnReason:''}`, link, to:l.ownerId });
     });
@@ -111,7 +115,7 @@
         <div class="card kpi"><div class="l">Toca hoy</div><div class="v" style="color:${due.length?'var(--red)':'var(--green)'}">${due.length}</div><div class="s">seguimientos pendientes</div></div>
         <div class="card kpi"><div class="l">Sin contactar</div><div class="v">${fresh.length}</div><div class="s">prospectos esperando el 1º mensaje</div></div>
         <div class="card kpi"><div class="l">Contactos esta semana</div><div class="v">${sent}</div><div class="s">meta: 10 🎯</div><div class="bar" style="margin-top:8px"><div style="width:${Math.min(sent/10,1)*100}%"></div></div></div>
-        <div class="card kpi"><div class="l">En conversación</div><div class="v">${leads.filter(l=>['reunion','propuesta','negociacion'].includes(l.stage)).length}</div><div class="s">reunión, propuesta o negociación</div></div>
+        <div class="card kpi"><div class="l">En conversación</div><div class="v">${leads.filter(l=>['reunion','ppt','propuesta','negociacion'].includes(l.stage)).length}</div><div class="s">reunión, PPT o negociación</div></div>
       </div>
       <div class="toolbar"><div class="small muted grow">Tu lista del día: primero los seguimientos vencidos, después los prospectos con más 🔥 ganas. Tocá “✉️ Mensaje” para armarlo y mandarlo en un clic.</div>
         ${hasHunter?'':'<button class="btn g" onclick="Growth.importHunter()">⇣ Importar lista Hunter (50)</button>'}<button class="btn p" onclick="Growth.editLead()">＋ Prospecto</button></div>
@@ -119,6 +123,7 @@
         <div class="card"><div class="card-h"><h3>📞 Seguimientos de hoy</h3><span class="sub">${due.length}</span></div>${due.length?`<div class="list">${due.map(l=>leadRow(l)).join('')}</div>`:'<div class="empty small">Nada vencido. 🎉</div>'}</div>
         <div class="card"><div class="card-h"><h3>🎯 Para escribirles por primera vez</h3><span class="sub">ordenados por ganas</span></div>${fresh.length?`<div class="list">${fresh.slice(0,15).map(l=>leadRow(l)).join('')}</div>${fresh.length>15?`<a class="xs" href="#/crecimiento/contactos">Ver los ${fresh.length} →</a>`:''}`:'<div class="empty small">No hay prospectos sin contactar.</div>'}</div>
       </div><div class="col" style="gap:18px">
+        ${(()=>{ const ppts = leads.filter(l=>l.stage==='ppt').sort(byGanas); return `<div class="card"><div class="card-h"><h3>🖼️ PPTs en armado</h3><span class="sub">${ppts.length}</span></div>${ppts.length?`<div class="list">${ppts.map(l=>`<div class="li click" onclick="App.go('#/crecimiento/lead/${l.id}')"><div class="grow"><div class="small b ellip">${esc(l.company)}</div><div class="xs faint">${esc(label(PPT_ST,l.pptStatus||'armar'))} · hace ${UI.diffDays((l.stageAt||l.createdAt).slice(0,10))} días</div></div>${l.pptLink?'<span class="tag t-green">link ✓</span>':''}</div>`).join('')}</div>`:'<div class="small faint">Cuando alguien se interese, pasalo a “Armando la PPT” y se crea la tarea sola.</div>'}</div>`; })()}
         <div class="card"><div class="card-h"><h3>📅 Próximos 7 días</h3></div>${week.length?`<div class="list">${week.map(l=>`<div class="li click" onclick="App.go('#/crecimiento/lead/${l.id}')"><div class="grow small b ellip">${esc(l.company)}</div><span class="tag">${UI.fdate(l.nextFollowUp)}</span></div>`).join('')}</div>`:'<div class="small faint">Sin seguimientos agendados.</div>'}</div>
         <div class="card small"><div class="card-h"><h3>Cómo funciona la secuencia</h3></div>
           <div class="muted" style="line-height:1.7">1º toque: una observación concreta de su negocio.<br>2º toque (4 días después): aportar una idea, no “¿viste mi mensaje?”.<br>3º toque: credencial del rubro (MiPileta).<br>Cada envío suma +${Game.XP.interaction} XP y agenda solo el próximo contacto.</div></div>
@@ -136,7 +141,7 @@
         ${items.map(leadCard).join('')}
         ${k==='objetivo'?`<button class="btn g sm" style="width:100%;justify-content:center" onclick="Growth.editLead()">＋ Agregar</button>`:''}</div>`;
     }).join('');
-    return { html:`<div class="toolbar"><div class="small muted grow">Arrastrá las tarjetas para cambiar de etapa. Ordenadas por 🔥 ganas.</div>
+    return { html:`<div class="toolbar"><div class="small muted grow">Arrastrá las tarjetas para cambiar de etapa. Si alguien se interesa → “Armando la PPT” (se crea la tarea). Al soltarlo en “Pasó a cliente” se crea en Operaciones.</div>
       <button class="btn g" onclick="Growth.logTouch()">＋ Registrar contacto</button><button class="btn p" onclick="Growth.editLead()">＋ Prospecto</button></div>
       <div class="board" id="lboard">${lanes}</div>`,
       after:()=>UI.kanban($('#lboard'), (id,st)=>Growth.setStage(id,st)) };
@@ -144,10 +149,12 @@
 
   function leadCard(l){
     const over = l.nextFollowUp && l.nextFollowUp<UI.today() && OPEN.includes(l.stage);
+    if(l.stage==='ganado') return `<div class="kc" data-drag="${l.id}" onclick="App.go('${l.opsClientId?'#/ops/cliente/'+l.opsClientId:'#/crecimiento/lead/'+l.id}')"><div class="t">🏆 ${esc(l.company)}</div><div class="xs" style="color:var(--green)">${l.opsClientId?'Es cliente → ver en Operaciones':'Ganado'}</div></div>`;
+    const pptTag = l.stage==='ppt' ? `<div class="m" style="margin-top:6px"><span class="tag t-purple">🖼️ ${esc(label(PPT_ST,l.pptStatus||'armar'))}</span></div>` : '';
     return `<div class="kc ${over?'over':''}" data-drag="${l.id}" onclick="App.go('#/crecimiento/lead/${l.id}')">
       <div class="t">${esc(l.company)}</div><div class="xs faint ellip">${esc([l.contactName,l.industry].filter(Boolean).join(' · '))}</div>
       <div class="m" style="margin-top:8px">${flames(l.ganas, l.id)}<span class="grow"></span>${UI.avatar(App.member(l.ownerId),'sm')}</div>
-      ${l.nextFollowUp?`<div class="m" style="margin-top:6px"><span class="tag ${over?'t-red':''}">📞 ${UI.fdate(l.nextFollowUp)}</span>${l.touches?`<span class="xs faint">${l.touches} toque${l.touches>1?'s':''}</span>`:''}</div>`:''}</div>`;
+      ${pptTag}${l.nextFollowUp?`<div class="m" style="margin-top:6px"><span class="tag ${over?'t-red':''}">📞 ${UI.fdate(l.nextFollowUp)}</span>${l.touches?`<span class="xs faint">${l.touches} toque${l.touches>1?'s':''}</span>`:''}</div>`:''}</div>`;
   }
 
   function viewContacts(){
@@ -190,15 +197,14 @@
     const leads = L().filter(inUnit);
     const won = leads.filter(l=>l.stage==='ganado'), lost = leads.filter(l=>l.stage==='perdido');
     const contacted = leads.filter(l=>(l.touches||0)>0 || stageIdx(l.stage)>=1);
-    const replied = leads.filter(l=>['reunion','propuesta','negociacion','ganado'].includes(l.stage) || (l.stage==='perdido' && l.touches));
     const rate = won.length+lost.length ? Math.round(won.length/(won.length+lost.length)*100) : null;
-    const reply = contacted.length ? Math.round(leads.filter(l=>['reunion','propuesta','negociacion','ganado'].includes(l.stage)).length/contacted.length*100) : null;
+    const reply = contacted.length ? Math.round(leads.filter(l=>['reunion','ppt','propuesta','negociacion','ganado'].includes(l.stage)).length/contacted.length*100) : null;
     const cycle = won.filter(l=>l.stageAt&&l.createdAt).map(l=>UI.diffDays(l.createdAt.slice(0,10), l.stageAt.slice(0,10)));
     const avgCycle = cycle.length ? Math.round(cycle.reduce((a,b)=>a+b,0)/cycle.length) : null;
     const touches = Store.all('growth','interactions').filter(t=>t.type!=='etapa');
     const funnel = STAGES.filter(s=>OPEN.includes(s[0])||s[0]==='ganado').map(s=>({ s, n:leads.filter(l=>l.stage===s[0] || (stageIdx(l.stage)>stageIdx(s[0]) && !['perdido','ex'].includes(l.stage))).length }));
     const max = Math.max(1, ...funnel.map(f=>f.n));
-    const bySrc = {}; leads.forEach(l=>{ const k = l.source||'Sin dato'; bySrc[k] = bySrc[k]||{ n:0, adv:0 }; bySrc[k].n++; if(['reunion','propuesta','negociacion','ganado'].includes(l.stage)) bySrc[k].adv++; });
+    const bySrc = {}; leads.forEach(l=>{ const k = l.source||'Sin dato'; bySrc[k] = bySrc[k]||{ n:0, adv:0 }; bySrc[k].n++; if(['reunion','ppt','propuesta','negociacion','ganado'].includes(l.stage)) bySrc[k].adv++; });
     return { html:`<div class="grid g4" style="margin-bottom:22px">
       <div class="card kpi"><div class="l">Prospectos abiertos</div><div class="v">${leads.filter(l=>OPEN.includes(l.stage)).length}</div><div class="s">${contacted.length} ya contactados</div></div>
       <div class="card kpi"><div class="l">Tasa de respuesta</div><div class="v" style="color:var(--blue-l)">${reply!=null?reply+'%':'—'}</div><div class="s">contactados que llegaron a reunión</div></div>
@@ -209,7 +215,29 @@
       <div class="col" style="gap:18px"><div class="card"><div class="card-h"><h3>¿De dónde vienen las mejores oportunidades?</h3></div>
         ${Object.entries(bySrc).sort((a,b)=>b[1].n-a[1].n).map(([k,v])=>`<div style="margin-bottom:10px"><div class="row small"><span class="grow b">${esc(k)}</span><span class="faint">${v.adv}/${v.n} avanzaron</span></div><div class="bar"><div style="width:${v.n?v.adv/v.n*100:0}%;background:var(--green)"></div></div></div>`).join('')||'<div class="small faint">Sin datos</div>'}</div>
       <div class="card"><div class="card-h"><h3>Actividad comercial reciente</h3><span class="sub">${touches.filter(t=>t.at>=Game.weekStart()).length} esta semana</span></div>
-        <div class="list">${touches.sort((a,b)=>b.at.localeCompare(a.at)).slice(0,8).map(t=>{ const l = Store.get('growth','leads',t.leadId); return `<div class="li">${UI.avatar(App.member(t.by),'sm')}<div class="grow"><div class="small b ellip">${esc(l?.company||'—')}</div><div class="xs faint ellip">${esc(label(TOUCH,t.type))} · ${esc(t.text||'')}</div></div><span class="xs faint">${UI.ago(t.at)}</span></div>`; }).join('')||'<div class="small faint">Sin actividad</div>'}</div></div></div></div>` };
+        <div class="list">${touches.sort((a,b)=>b.at.localeCompare(a.at)).slice(0,8).map(t=>{ const l = Store.get('growth','leads',t.leadId); return `<div class="li">${UI.avatar(App.member(t.by),'sm')}<div class="grow"><div class="small b ellip">${esc(l?.company||'—')}</div><div class="xs faint ellip">${esc(label([...TOUCH,...TOUCH_ALL],t.type))} · ${esc(t.text||'')}</div></div><span class="xs faint">${UI.ago(t.at)}</span></div>`; }).join('')||'<div class="small faint">Sin actividad</div>'}</div></div></div></div>` };
+  }
+
+  // ── Presentación (PPT) ──────────────────────────────────────────────────────
+  function brief(l){
+    return [`PROPUESTA ANM · ${l.company}`, '',
+      `Contacto: ${[l.contactName, l.role].filter(Boolean).join(' — ')||'—'}`, `Rubro: ${l.industry||'—'}${l.city?' · '+l.city:''}`, '',
+      'POR QUÉ NOS INTERESA', l.why||'—', '', 'OPORTUNIDAD QUE VEMOS', l.gap||'—', '', 'CON QUÉ ENTRARÍAMOS', l.pieza||'—', '',
+      'LO QUE LES APORTAMOS', aporteOf(l), '', `Enfoque: ${PITCH[l.pitch]?.t||'—'}`, '',
+      'ESTRUCTURA SUGERIDA DE LA PPT', '1. Quiénes somos (ANM + caso MiPileta)', '2. Lo que vimos de su marca (diagnóstico)', '3. La oportunidad', '4. Propuesta: qué haríamos los primeros 90 días', '5. Equipo y forma de trabajo', '6. Próximos pasos'].join('\n');
+  }
+  function pptCard(l){
+    const st = l.pptStatus || (l.stage==='ppt'?'armar':'');
+    const task = l.pptTaskId && Store.get('ops','tasks',l.pptTaskId);
+    return `<div class="card" style="border-color:color-mix(in srgb,var(--purple) 45%,transparent)"><div class="card-h"><h3>🖼️ Presentación (PPT)</h3><span class="grow"></span>
+        <select class="inp sm" onchange="Growth.setPpt('${l.id}',{pptStatus:this.value})"><option value="">—</option>${PPT_ST.map(([k,t])=>`<option value="${k}" ${k===st?'selected':''}>${t}</option>`).join('')}</select></div>
+      <div class="row wrap" style="gap:8px;margin-bottom:12px">
+        <input class="inp grow" style="min-width:220px" placeholder="Link a la PPT (Canva, Google Slides, Drive…)" value="${esc(l.pptLink||'')}" onchange="Growth.setPpt('${l.id}',{pptLink:this.value.trim()})">
+        ${l.pptLink?`<a class="btn sm g" target="_blank" href="${esc(l.pptLink)}">Abrir ↗</a>`:''}</div>
+      <div class="row wrap" style="gap:8px"><button class="btn sm g" onclick="Growth.copyBrief('${l.id}')">📋 Copiar brief para la PPT</button>
+        ${task?`<a class="btn sm g" href="#/ops/tareas">✅ Tarea: ${esc(task.status==='done'?'hecha':App.member(task.assigneeId)?.name||'sin asignar')}</a>`:`<button class="btn sm g" onclick="Growth.pptTask('${l.id}')">＋ Crear tarea “Armar PPT”</button>`}
+        ${l.stage==='ppt'&&st==='lista'?`<button class="btn sm p" onclick="Growth.setStage('${l.id}','propuesta')">📄 Marcar como presentada</button>`:''}</div>
+      <p class="xs faint" style="margin-top:10px">El brief junta la oportunidad, la pieza de entrada y lo que les aportamos, listo para pegar en Canva o Slides.</p></div>`;
   }
 
   // ── Ficha del prospecto ─────────────────────────────────────────────────────
@@ -230,15 +258,18 @@
         <div class="row" style="margin-top:14px;gap:12px"><span class="xs faint b">GANAS DE TRABAJAR CON ELLOS</span>${flames(l.ganas, id)}</div></div>
         <div class="col" style="align-items:stretch;min-width:220px"><button class="btn p" onclick="Growth.compose('${id}')">✉️ Armar y mandar mensaje</button>
           <select class="inp" onchange="Growth.setStage('${id}',this.value)">${STAGES.map(x=>`<option value="${x[0]}" ${x[0]===l.stage?'selected':''}>${x[2]} ${x[1]}</option>`).join('')}</select>
-          <div class="row"><button class="btn g sm grow" onclick="Growth.logTouch('${id}')">＋ Registrar contacto</button><button class="btn g sm" onclick="Growth.editLead('${id}')">✎</button></div></div></div>
+          <div class="row"><button class="btn g sm grow" onclick="Growth.logTouch('${id}')">＋ Registrar contacto</button><button class="btn g sm" onclick="Growth.editLead('${id}')">✎</button></div>
+          ${['reunion','ppt','propuesta','negociacion'].includes(l.stage)?`<button class="btn ok" onclick="if(confirm('¿${esc(l.company).replace(/'/g,'')} ya es cliente? Pasa a Operaciones.'))Growth.setStage('${id}','ganado')">🏆 ¡Es cliente!</button>`:''}</div></div>
       <div class="grid g3"><div class="span2 col" style="gap:18px">
+        ${l.stage==='ganado'?`<div class="alert info" style="margin:0;border-color:var(--green);background:var(--green-d)"><div class="ai">🏆</div><div class="grow"><div class="at">¡Es cliente!</div><div class="ad">Ya pasó a Operaciones: el seguimiento, tareas y calendario siguen ahí.</div></div>${l.opsClientId?`<a class="btn sm ok" href="#/ops/cliente/${l.opsClientId}">Ver en Operaciones →</a>`:`<button class="btn sm ok" onclick="Growth.toClient('${id}')">Crear en Operaciones</button>`}</div>`:''}
+        ${['reunion','ppt','propuesta','negociacion'].includes(l.stage)||l.pptLink?pptCard(l):''}
         ${l.nextFollowUp||l.nextAction?`<div class="alert ${l.nextFollowUp&&l.nextFollowUp<UI.today()?'danger':'info'}" style="margin:0"><div class="ai">📞</div><div class="grow"><div class="at">${esc(l.nextAction||'Hacer seguimiento')}</div><div class="ad">${l.nextFollowUp?UI.fdate(l.nextFollowUp,{abs:true}):'Sin fecha'}${l.touches?` · ${l.touches} toque${l.touches>1?'s':''} hechos`:''}</div></div></div>`:''}
         <div class="card"><div class="card-h"><h3>💪 Lo que le podemos aportar</h3>${pitch?`<span class="tag t-purple">${pitch.e} ${esc(pitch.t)}</span>`:''}<span class="grow"></span><button class="btn xs g" onclick="Growth.editLead('${id}')">Editar</button></div>
           ${l.gap?`<div class="xs faint b" style="margin-bottom:4px">OPORTUNIDAD QUE VEMOS</div><div class="small" style="margin-bottom:14px">${esc(l.gap)}</div>`:''}
           ${l.pieza?`<div class="xs faint b" style="margin-bottom:4px">CON QUÉ ENTRARÍAMOS</div><div class="small" style="margin-bottom:14px">${esc(l.pieza)}</div>`:''}
           <div class="xs faint b" style="margin-bottom:4px">PUNTOS FUERTES DE ANM PARA ELLOS</div><div class="small prewrap">${esc(aporteOf(l))}</div></div>
         <div class="card"><div class="card-h"><h3>Historial de contactos</h3><span class="sub">${touches.length}</span></div>
-          ${touches.length?`<div class="tl">${touches.map(t=>`<div class="tl-i"><div class="when">${UI.fdate(t.at.slice(0,10),{abs:true})} · ${esc(label(TOUCH,t.type))} · ${esc(App.member(t.by)?.name||'')}</div><div class="small prewrap">${esc(t.text||'')}</div></div>`).join('')}</div>`:'<div class="empty small">Todavía no hubo contacto. Arrancá con “✉️ Armar y mandar mensaje”.</div>'}</div>
+          ${touches.length?`<div class="tl">${touches.map(t=>`<div class="tl-i"><div class="when">${UI.fdate(t.at.slice(0,10),{abs:true})} · ${esc(label([...TOUCH,...TOUCH_ALL],t.type))} · ${esc(App.member(t.by)?.name||'')}</div><div class="small prewrap">${esc(t.text||'')}</div></div>`).join('')}</div>`:'<div class="empty small">Todavía no hubo contacto. Arrancá con “✉️ Armar y mandar mensaje”.</div>'}</div>
       </div><div class="col" style="gap:18px">
         ${l.why?`<div class="card small"><div class="card-h"><h3>¿Por qué nos interesa?</h3></div><div class="muted">${esc(l.why)}</div></div>`:''}
         <div class="card small"><div class="card-h"><h3>Datos</h3></div>
@@ -252,7 +283,37 @@
 
   // ── Acciones ────────────────────────────────────────────────────────────────
   const Growth = {
-    STAGES, alerts,
+    STAGES, OPEN, alerts,
+    copyBrief(id){ UI.copy(brief(Store.get('growth','leads',id))); },
+    setPpt(id, patch){
+      const l = Store.get('growth','leads',id);
+      Store.upsert('growth','leads',{ id, ...patch });
+      if(patch.pptStatus==='presentada' && l.stage==='ppt') return Growth.setStage(id,'propuesta');
+      if(patch.pptStatus==='lista' && l.pptStatus!=='lista'){ Game.log('lead_advance', `PPT lista: ${l.company}`, { icon:'🖼️' }); }
+      App.render();
+    },
+    pptTask(id, quiet){
+      const l = Store.get('growth','leads',id); if(!l || (l.pptTaskId && Store.get('ops','tasks',l.pptTaskId))) return;
+      const t = Store.upsert('ops','tasks',{ title:`Armar PPT para ${l.company}`, clientId:'', unit:(l.units||[])[0]||'', assigneeId:l.ownerId||App.me().id, due:UI.addDays(UI.today(),3), status:'todo', priority:'alta', desc:brief(l)+`\n\nFicha: #/crecimiento/lead/${id}` });
+      Store.upsert('growth','leads',{ id, pptTaskId:t.id, pptStatus:l.pptStatus||'armar' });
+      if(t.assigneeId!==App.me().id) App.notify(t.assigneeId, `🖼️ Te toca armar la PPT para ${l.company} (para el ${UI.fdate(t.due,{abs:true})})`, '#/crecimiento/lead/'+id);
+      if(!quiet){ UI.toast('Tarea “Armar PPT” creada','🖼️'); App.render(); }
+    },
+    // Crea (o vincula) el cliente en Operaciones
+    toClient(id){
+      const l = Store.get('growth','leads',id); if(!l) return;
+      let c = Store.all('ops','clients').find(x=>x.name.toLowerCase()===l.company.toLowerCase());
+      if(!c){
+        const status = 'Cliente nuevo — viene del CRM. ¡Arranca el onboarding!';
+        c = Store.upsert('ops','clients',{ name:l.company, units:l.units?.length?l.units:['otros'], ownerId:l.ownerId, health:'ok', active:true, contactName:l.contactName, contactPhone:l.whatsapp||l.phone, contactEmail:l.email, link:l.pptLink||'', notes:[l.gap&&'Oportunidad: '+l.gap, l.pieza&&'Entramos con: '+l.pieza, l.notes].filter(Boolean).join('\n'), status });
+        Store.upsert('ops','updates',{ clientId:c.id, at:new Date().toISOString(), by:App.me().id, health:'ok', text:status });
+        Store.upsert('ops','tasks',{ title:`Onboarding de ${l.company}: kickoff, accesos y brief`, clientId:c.id, unit:(l.units||[])[0]||'', assigneeId:l.ownerId||App.me().id, due:UI.addDays(UI.today(),5), status:'todo', priority:'alta' });
+      } else if(c.active===false) Store.upsert('ops','clients',{ id:c.id, active:true });
+      Store.upsert('growth','leads',{ id, opsClientId:c.id });
+      UI.toast(`${l.company} pasó a Operaciones como cliente`,'🗂️');
+      if(App.isAdmin()) setTimeout(()=>UI.toast('Recordá cargar su retainer en Finanzas','💡'), 900);
+      App.render();
+    },
     setQ(v){ q = v; const pos = document.activeElement?.selectionStart; App.render(); const i = $('.search input'); if(i){ i.focus(); try{ i.setSelectionRange(pos,pos); }catch(e){} } },
     setStageF(v){ stageF = v; App.render(); }, setGanasF(v){ ganasF = v; App.render(); },
     setGanas(id, n){ const l = Store.get('growth','leads',id); Store.upsert('growth','leads',{ id, ganas: l.ganas===n ? n-1 : n }); App.render(); },
@@ -328,17 +389,14 @@
       if(st==='perdido'){ const r = prompt(`¿Por qué no avanzó ${l.company}? (no respondió, timing, eligieron a otro…)`); if(r===null) return App.render(); extra.lostReason = r; extra.nextFollowUp = ''; }
       if(st==='ex'){ extra.churnedAt = UI.today(); extra.winbackDate = UI.addDays(UI.today(), 90); }
       if(st==='ganado') extra.nextFollowUp = '';
+      if(st==='propuesta'){ extra.pptStatus = 'presentada'; extra.pptSentAt = UI.today(); extra.nextFollowUp = UI.addDays(UI.today(),3); extra.nextAction = 'Seguimiento de la propuesta'; }
       Store.upsert('growth','leads',{ id, stage:st, stageAt:new Date().toISOString(), ...extra });
       Store.upsert('growth','interactions',{ leadId:id, at:new Date().toISOString(), by:App.me().id, type:'etapa', text:`Etapa: ${stage(l.stage)[1]} → ${stage(st)[1]}` });
+      if(st==='ppt'){ Growth.pptTask(id, true); UI.toast(`Tarea “Armar PPT” creada para ${l.company}`,'🖼️'); }
       if(st==='ganado'){
         Game.log('lead_won', `¡Ganamos a ${l.company}!`, { icon:'🏆' }); UI.confetti(140);
         App.notify('all', `🏆 ¡Nuevo cliente: ${l.company}!`, '#/crecimiento/lead/'+id);
-        const has = Store.all('ops','clients').some(c=>c.name.toLowerCase()===l.company.toLowerCase());
-        if(!has && confirm(`¡Bien ahí! 🎉\n\n¿Creo a ${l.company} como cliente en Operaciones para empezar el seguimiento?`)){
-          const c = Store.upsert('ops','clients',{ name:l.company, units:l.units?.length?l.units:['otros'], ownerId:l.ownerId, health:'ok', active:true, contactName:l.contactName, contactPhone:l.whatsapp||l.phone, contactEmail:l.email, notes:l.notes||'', status:'Cliente nuevo — viene del CRM. ¡Arranca el onboarding!' });
-          Store.upsert('ops','updates',{ clientId:c.id, at:new Date().toISOString(), by:App.me().id, health:'ok', text:'Cliente nuevo — viene del CRM. ¡Arranca el onboarding!' });
-          if(App.isAdmin()) UI.toast('Recordá cargar su retainer en Finanzas','💡');
-        }
+        return Growth.toClient(id);
       } else if(stageIdx(st)>stageIdx(l.stage) && OPEN.includes(st) && !quiet) Game.log('lead_advance', `${l.company} → ${stage(st)[1]}`, { icon:'➡️' });
       App.render();
     },
