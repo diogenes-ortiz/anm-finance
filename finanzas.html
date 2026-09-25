@@ -852,7 +852,7 @@ const DEFAULT_STATE = {
   clientes:[],proyectos:[],empleados:[],gastos:[],
   cobros:[],pagosEq:[],skips:[],facturas:[],extras:[],
   clientesPausados:[],transferencias:[],extrasEquipo:[],
-  cotizacion:1500, fondoUSD:1047.75,
+  cotizacion:1500, fondoUSD:0,
   mes: new Date().getMonth(), anio: new Date().getFullYear(),
   metas:{facturacion:0,clientes:0},
   _seeded: false   // ← flag que evita re-seedear
@@ -1958,51 +1958,10 @@ function render(){
 // ─── SEED — SOLO SE EJECUTA UNA VEZ ──────────────────────────────────────────
 // FIX PRINCIPAL: initSeed ahora usa S._seeded para no sobreescribir nunca datos reales
 function initSeed(){
-  if(S._seeded) return;   // ← ya fue seedado antes, no tocar nada
-  if(S.clientes.length || S.empleados.length || S.proyectos.length) {
-    S._seeded=true; save(); return;  // ← hay datos reales, marcar como seedado y salir
-  }
-
-  S.clientes=[
-    {id:101,nombre:'Mipileta', tipo:'rrss',     servicios:'Community management, contenido, reels',retainer:3000000,moneda:'ARS',contacto:'',estado:'activo',empleadoIds:[204,205],presupuesto:null,inicioServicio:'2025-09',retainerHistory:[{monto:1700000,desde:'2025-09',nota:'Inicial'},{monto:3000000,desde:'2026-03',nota:'Aumento de costo de servicio'}]},
-    {id:102,nombre:'Modulo',   tipo:'rrss',     servicios:'Community management, contenido mensual',retainer:420000,moneda:'ARS',contacto:'',estado:'activo',empleadoIds:[203],presupuesto:null,inicioServicio:'2025-09',retainerHistory:[{monto:420000,desde:'2025-09',nota:'Inicial'}]},
-    {id:103,nombre:'Coarmi',   tipo:'pauta',    servicios:'Gestión de pauta Meta + Google',retainer:250000,moneda:'ARS',contacto:'',estado:'activo',empleadoIds:[203],presupuesto:null,inicioServicio:'2025-09',retainerHistory:[{monto:250000,desde:'2025-09',nota:'Inicial'}]},
-    {id:104,nombre:'Antquera', tipo:'rrss',     servicios:'Community management, contenido, reels',retainer:1350000,moneda:'ARS',contacto:'',estado:'activo',empleadoIds:[205],presupuesto:null,inicioServicio:'2025-12',retainerHistory:[{monto:1350000,desde:'2025-12',nota:'Inicio'},{monto:1750000,desde:'2026-01',nota:'Servicio completo'},{monto:1350000,desde:'2026-03',nota:'Ajuste marzo 2026'}]},
-    {id:105,nombre:'Froz',     tipo:'rrss',     servicios:'Redes sociales completas',retainer:800000,moneda:'ARS',contacto:'',estado:'activo',empleadoIds:[],presupuesto:null,inicioServicio:'2026-03',retainerHistory:[{monto:800000,desde:'2026-03',nota:'Inicial'}]},
-  ];
-  S.empleados=[
-    {id:201,nombre:'Dio',        rol:'Socio — 40%',        sueldo:0,     moneda:'ARS',dia:5,dedicacion:'full',     estado:'activo',email:'',color:'#1A73E8',clienteIds:[]},
-    {id:202,nombre:'Santi',      rol:'Socio — 40%',        sueldo:0,     moneda:'ARS',dia:5,dedicacion:'full',     estado:'activo',email:'',color:'#4d96ff',clienteIds:[]},
-    {id:203,nombre:'Belen',      rol:'Community Manager',  sueldo:150000,moneda:'ARS',dia:1,dedicacion:'part',     estado:'activo',email:'',color:'#9b6fe8',clienteIds:[102,103],inicioLaboral:'2025-09',sueldoHistory:[{monto:150000,desde:'2025-09',nota:'Inicial'}]},
-    {id:204,nombre:'Luisina',    rol:'Community Manager',  sueldo:550000,moneda:'ARS',dia:1,dedicacion:'part',     estado:'activo',email:'',color:'#2dca72',clienteIds:[101],inicioLaboral:'2026-03',sueldoHistory:[{monto:550000,desde:'2026-03',nota:'Inicial'}]},
-    {id:205,nombre:'Ori',        rol:'Community Manager',  sueldo:500000,moneda:'ARS',dia:1,dedicacion:'freelance',estado:'activo',email:'',color:'#e8b84a',clienteIds:[101,104],inicioLaboral:'2025-09',sueldoHistory:[{monto:500000,desde:'2025-09',nota:'Inicial'}]},
-    {id:206,nombre:'Luli Pagani',rol:'Diseñadora',         sueldo:600000,moneda:'ARS',dia:1,dedicacion:'freelance',estado:'activo',email:'',color:'#2dcab4',clienteIds:[],inicioLaboral:'2026-03',sueldoHistory:[{monto:600000,desde:'2026-03',nota:'Inicial'}]},
-    {id:207,nombre:'Mile',       rol:'Community Manager',  sueldo:250000,moneda:'ARS',dia:1,dedicacion:'part',     estado:'inactivo',email:'',color:'#e8704a',clienteIds:[104],inicioLaboral:'2026-01',finLaboral:'2026-02',sueldoHistory:[{monto:250000,desde:'2026-01',nota:'Inicial'}]},
-    {id:208,nombre:'Martu',      rol:'Community Manager',  sueldo:400000,moneda:'ARS',dia:1,dedicacion:'part',     estado:'inactivo',email:'',color:'#a0a0b0',clienteIds:[101],inicioLaboral:'2025-09',finLaboral:'2026-02',sueldoHistory:[{monto:400000,desde:'2025-09',nota:'Inicial'}]},
-  ];
-  S.clientes[0].empleadoIds=[204,205];
-  S.clientes[1].empleadoIds=[203];
-  S.clientes[2].empleadoIds=[203];
-  S.clientes[3].empleadoIds=[205];
-
-  S.proyectos=[
-    {id:1, nombre:'Página web',cliente:'Coarmi',   monto:281790,moneda:'ARS',fecha:'2025-09-19',estado:'cobrado',  etapa:'Pago 1 (50%)',empNombre:'',empCosto:0,    desc:'Inicio'},
-    {id:3, nombre:'Página web',cliente:'Coarmi',   monto:337500,moneda:'ARS',fecha:'2025-10-31',estado:'cobrado',  etapa:'Pago 2 (50%)',empNombre:'',empCosto:0,    desc:'Entrega final'},
-    {id:2, nombre:'Branding',  cliente:'La Barata',monto:450000,moneda:'ARS',fecha:'2025-10-10',estado:'cobrado',  etapa:'Pago 1 (50%)',empNombre:'Luli Pagani',empCosto:100000,desc:'Inicio'},
-    {id:12,nombre:'Branding',  cliente:'La Barata',monto:450000,moneda:'ARS',fecha:'2025-12-06',estado:'pendiente',etapa:'Pago 2 (50%)',empNombre:'Luli Pagani',empCosto:100000,desc:'Entrega final'},
-    {id:6, nombre:'Página web',cliente:'Mipileta', monto:925000,moneda:'ARS',fecha:'2025-10-29',estado:'cobrado',  etapa:'Pago 1 (50%)',empNombre:'',empCosto:0,    desc:'Inicio'},
-    {id:11,nombre:'Página web',cliente:'Mipileta', monto:925000,moneda:'ARS',fecha:'2025-12-10',estado:'pendiente',etapa:'Pago 2 (50%)',empNombre:'',empCosto:0,    desc:'Entrega final'},
-    {id:7, nombre:'Página web',cliente:'Froz',     monto:350000,moneda:'ARS',fecha:'2025-11-04',estado:'cobrado',  etapa:'Pago 1 (50%)',empNombre:'',empCosto:0,    desc:'Inicio'},
-    {id:15,nombre:'Página web',cliente:'Froz',     monto:350000,moneda:'ARS',fecha:'2025-12-04',estado:'pendiente',etapa:'Pago 2 (50%)',empNombre:'',empCosto:0,    desc:'Entrega final'},
-    {id:13,nombre:'Página web',cliente:'Telteco',  monto:150000,moneda:'ARS',fecha:'2025-12-06',estado:'cobrado',  etapa:'Pago 1 (50%)',empNombre:'',empCosto:0,    desc:'Inicio'},
-    {id:33,nombre:'Página web',cliente:'Telteco',  monto:150000,moneda:'ARS',fecha:'2026-02-06',estado:'pendiente',etapa:'Pago 2 (50%)',empNombre:'',empCosto:0,    desc:'Entrega final'},
-  ];
-  S.gastos=[];
-  S.cotizacion=1500;
-  S.fondoUSD=1047.75;
-  S.mes=2; S.anio=2026;
+  // Sin datos de ejemplo: la base arranca vacía (se cargan desde la app o con "Restaurar backup").
+  if(S._seeded) return;
   S._seeded=true;
-  save();
+  if(S.clientes.length || S.empleados.length || S.proyectos.length) save();
 }
 
 // ─── BOOT ─────────────────────────────────────────────────────────────────────
